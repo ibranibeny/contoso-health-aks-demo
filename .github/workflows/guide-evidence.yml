@@ -62,6 +62,8 @@ jobs:
           echo "::notice title=Screenshots::$(ls "$OUT_DIR" | grep -c '.png.b64$') captured, $(ls "$OUT_DIR" | grep -c '.error.txt$') failed"
 
       - name: Store on the guide-evidence branch
+        env:
+          EVIDENCE_KEY: ${{ secrets.EVIDENCE_KEY }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -74,7 +76,14 @@ jobs:
           fi
           mkdir -p "$OUT_DIR"
           rm -rf "../ev/runs/$LABEL" && mkdir -p "../ev/runs/$LABEL"
-          cp -r "$OUT_DIR"/. "../ev/runs/$LABEL/"
+          if [ -n "$EVIDENCE_KEY" ]; then
+            # The repository is public: store the bundle encrypted (AES-256-CBC, PBKDF2) in 350 KB parts.
+            tar czf /tmp/bundle.tgz -C "$OUT_DIR" .
+            openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in /tmp/bundle.tgz -out /tmp/bundle.enc -pass env:EVIDENCE_KEY
+            base64 -w0 /tmp/bundle.enc | split -b 350000 -d -a 3 - "../ev/runs/$LABEL/bundle.part."
+          else
+            cp -r "$OUT_DIR"/. "../ev/runs/$LABEL/"
+          fi
           echo "{\"run\": \"${GITHUB_RUN_ID}\", \"sha\": \"${GITHUB_SHA}\", \"time\": \"$(date -u +%FT%TZ)\"}" > "../ev/runs/$LABEL/_meta.json"
           cd ../ev
           git add -A
