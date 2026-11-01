@@ -26,9 +26,14 @@
 <main id="main"><div class="content">
 
 <p class="eyebrow">Outcome</p><h1>Infrastructure as code</h1>
-<p class="lead">The platform is one Bicep template in the repository. Changes are proposed in pull requests, previewed with what-if, and deployed by a workflow behind an approval.
-Nobody clicks resources into existence, and nobody holds a secret.</p>
-<h2 id="modules">What the template contains<a class="anchor" href="#modules" aria-label="Link to this section">#</a></h2>
+<p class="lead">Everything the demo needs is described in the repository, from the first resource group to the last NetworkPolicy. The platform changes only through pull requests,
+previewed with what-if and deployed by a workflow behind an approval. Nobody holds a secret.</p>
+<h2 id="layers">IaC at every layer<a class="anchor" href="#layers" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Layer</th><th>Tool</th><th>Path</th><th>Run by</th><th>When</th></tr></thead><tbody><tr><td>Bootstrap: resource group, deployment identity, federated credentials, role assignments</td><td>Bicep, subscription scope</td><td><code>infra/bootstrap</code></td><td>A subscription admin (Cloud Shell, or the Deploy to Azure button)</td><td>Once, before anything else</td></tr><tr><td>Repository settings: environment and reviewer, variables, ruleset</td><td>Terraform, <code>integrations/github</code> provider</td><td><code>github/</code></td><td>A repository admin (Cloud Shell)</td><td>Once, and when settings change</td></tr><tr><td>Platform: AKS, registry, monitoring, alert rules, policy</td><td>Bicep, resource-group scope</td><td><code>infra/</code></td><td>GitHub Actions with OIDC, after approval</td><td>Every merged change under <code>infra/</code></td></tr><tr><td>Workloads: Deployments, Services, HPA, PDB, NetworkPolicies</td><td>Kubernetes manifests, Kustomize</td><td><code>k8s/</code></td><td>GitHub Actions with OIDC, after approval</td><td>Every merged change under <code>src/</code> or <code>k8s/</code></td></tr></tbody></table></div>
+<p>Two tools, on purpose: Bicep is the native language for Azure resources, with what-if and day-zero support for new API versions. GitHub settings are not Azure resources,
+so the GitHub provider for Terraform manages them. <code>scripts/bootstrap.sh</code> chains the two: the Bicep outputs (client ID, tenant, subscription) become Terraform inputs.</p>
+<p>Steps 2 to 4 of the guide show both paths: the portal and GitHub clicks, and the same result as code (<a href="../guide/step-03.html#as-code">example</a>).</p>
+<h2 id="modules">What the platform template contains<a class="anchor" href="#modules" aria-label="Link to this section">#</a></h2>
 <div class="table-wrap"><table><thead><tr><th>File</th><th>Creates</th></tr></thead><tbody><tr><td><code>infra/main.bicep</code></td><td>Names, tags, wiring between modules, outputs</td></tr><tr><td><code>infra/modules/monitoring.bicep</code></td><td>Log Analytics workspace, Azure Monitor workspace</td></tr><tr><td><code>infra/modules/acr.bicep</code></td><td>Container registry (admin user and anonymous pull disabled)</td></tr><tr><td><code>infra/modules/aks.bicep</code></td><td>AKS cluster, diagnostic settings, AcrPull and AKS RBAC Cluster Admin role assignments</td></tr><tr><td><code>infra/modules/aks-monitoring.bicep</code></td><td>Prometheus and Container insights data collection, recording rules, alert rules, optional action group</td></tr><tr><td><code>infra/modules/policy.bicep</code></td><td>Three Azure Policy assignments</td></tr></tbody></table></div>
 <p>Parameters that are safe to commit live in <code>main.bicepparam</code>; identity values come from repository variables at run time:</p>
 <div class="code"><div class="bar"><span>infra/main.bicepparam</span><button class="copy" type="button">Copy</button></div><pre><code>using &#x27;./main.bicep&#x27;
@@ -131,7 +136,7 @@ param alertEmail = readEnvironmentVariable(&#x27;ALERT_EMAIL&#x27;, &#x27;&#x27;
 <p>Walkthrough: <a href="../guide/step-05.html">Step 5 · Provision with Bicep</a> and <a href="../guide/step-07.html#whatif">Step 7 · Preview an infrastructure change</a>.</p>
 
 </div></main>
-<aside class="toc" aria-label="On this page"><h5>On this page</h5><a href="#modules">What the template contains</a><a href="#cluster">The cluster definition</a><a href="#flow">How a change flows</a><a href="#evidence">Where to see it</a></aside>
+<aside class="toc" aria-label="On this page"><h5>On this page</h5><a href="#layers">IaC at every layer</a><a href="#modules">Platform template</a><a href="#cluster">The cluster definition</a><a href="#flow">How a change flows</a><a href="#evidence">Where to see it</a></aside>
 </div>
 <footer class="site">Contoso Health is a fictional company. All member and hospital data is synthetic. Built for an Azure Kubernetes Service demo in <code>indonesiacentral</code> · <a href="https://github.com/ibranibeny/contoso-health-aks-demo">Source on GitHub</a></footer>
 <script src="../assets/js/site.js" defer></script>

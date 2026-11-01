@@ -27,6 +27,7 @@
 <p class="eyebrow">Step 4 of 10</p><h1>Connect GitHub to Azure</h1><p class="lead">Give the repository the identifiers it needs, an approval gate in front of production, and a ruleset that sends every change to <code>main</code> through a pull request with green checks.</p>
 <div class="meta"><span class="chip"><b>15 min</b></span><span class="chip">Azure portal</span><span class="chip">GitHub</span><span class="chip accent">Governance</span><span class="chip accent">CI/CD</span></div>
 <h2 id="goals">What you will do<a class="anchor" href="#goals" aria-label="Link to this section">#</a></h2><ul><li>Find your own Object ID so the template can grant you access to the cluster.</li><li>Create the <code>production</code> environment with yourself as required reviewer.</li><li>Add the repository variables the workflows read.</li><li>Protect <code>main</code> with a branch ruleset: pull request, required status checks, no force pushes.</li></ul>
+<div class="callout tip"><span class="t">Two ways to do this step</span><p>This page clicks through the portal and GitHub, with a video and a screenshot for every click. The same result is also defined as code: see <a href="#as-code">Do it as code</a> at the end of the page. Pick one path for steps 2 to 4; <code>scripts/bootstrap.sh</code> runs all three as code in one go.</p></div>
 <h2 id="objectid">Find your user Object ID<a class="anchor" href="#objectid" aria-label="Link to this section">#</a></h2>
 
 <ol class="walk"><li><p class="say">Microsoft Entra ID, Users: search for the account you sign in to the portal with, then open it.</p><figure class="shot"><a href="../assets/shots/s4-01.webp" target="_blank" rel="noopener"><img src="../assets/shots/s4-01.webp" alt="Microsoft Entra ID, Users: search for the account you sign in to the portal with, then open it." width="1024" height="768" loading="lazy" decoding="async"></a><figcaption>s4-01</figcaption></figure></li><li><p class="say">Copy the Object ID. It becomes the ADMIN_PRINCIPAL_ID variable, so Bicep grants you AKS RBAC Cluster Admin for the portal&#x27;s Kubernetes views.</p><figure class="shot"><a href="../assets/shots/s4-02.webp" target="_blank" rel="noopener"><img src="../assets/shots/s4-02.webp" alt="Copy the Object ID. It becomes the ADMIN_PRINCIPAL_ID variable, so Bicep grants you AKS RBAC Cluster Admin for the portal&#x27;s Kubernetes views." width="1024" height="768" loading="lazy" decoding="async"></a><figcaption>s4-02</figcaption></figure></li></ol>
@@ -49,15 +50,78 @@ Container build (membership-api)
 Container build (bed-api)
 Container build (portal)
 Validate Bicep (IaC)
+Validate Terraform (GitHub settings)
 Validate Kubernetes manifests
 Analyze (javascript-typescript)
 Analyze (actions)</code></pre></div>
-<h2 id="verify">Check your work<a class="anchor" href="#verify" aria-label="Link to this section">#</a></h2><ul class="checks"><li><code>production</code> shows <strong>1 protection rule</strong> (required reviewer) and the branch policy <code>main</code>.</li><li>Five or more repository variables exist, including the four required ones.</li><li><span class="ui">Rulesets</span> lists <code>protect-main</code> as <strong>Active</strong>. A direct push to <code>main</code> is now rejected.</li></ul>
+<h2 id="as-code">Do it as code<a class="anchor" href="#as-code" aria-label="Link to this section">#</a></h2>
+<p>GitHub settings are not Azure resources, so Bicep cannot manage them. The <code>github/</code> folder uses the GitHub provider for Terraform (<code>integrations/github</code>) for the environment, its reviewer and branch policy, the repository variables and the ruleset.</p><div class="code"><div class="bar"><span>github/main.tf (excerpt)</span><button class="copy" type="button">Copy</button></div><pre><code>resource &quot;github_repository_environment&quot; &quot;production&quot; {
+  repository          = var.repository
+  environment         = &quot;production&quot;
+  prevent_self_review = var.prevent_self_review
+  can_admins_bypass   = false
+
+  reviewers {
+    users = [data.github_user.reviewer.id]
+  }
+
+  deployment_branch_policy {
+    protected_branches     = false
+    custom_branch_policies = true
+  }
+}</code></pre></div><div class="code"><div class="bar"><span>github/main.tf (excerpt)</span><button class="copy" type="button">Copy</button></div><pre><code>resource &quot;github_repository_ruleset&quot; &quot;protect_main&quot; {
+  name        = &quot;protect-main&quot;
+  repository  = var.repository
+  target      = &quot;branch&quot;
+  enforcement = &quot;active&quot;
+
+  conditions {
+    ref_name {
+      include = [&quot;~DEFAULT_BRANCH&quot;]
+      exclude = []
+    }
+  }
+
+  rules {
+    deletion         = true
+    non_fast_forward = true
+
+    pull_request {
+      required_approving_review_count   = var.required_approvals
+      required_review_thread_resolution = true
+      dismiss_stale_reviews_on_push     = true
+    }
+
+    required_status_checks {
+      strict_required_status_checks_policy = false
+
+      dynamic &quot;required_check&quot; {
+        for_each = var.required_checks
+        content {
+          context = required_check.value
+        }
+      }
+    }
+
+    dynamic &quot;copilot_code_review&quot; {
+      for_each = var.copilot_code_review ? [1] : []
+      content {
+        review_on_push = true
+      }
+    }
+  }
+}</code></pre></div><p>Run it in Cloud Shell after the bootstrap (the script passes the bootstrap outputs for you):</p><div class="code"><div class="bar"><span>Azure Cloud Shell (Bash)</span><button class="copy" type="button">Copy</button></div><pre><code>cp github/terraform.tfvars.example github/terraform.tfvars   # fill in the bootstrap outputs
+export GITHUB_TOKEN=$(gh auth token)
+terraform -chdir=github init
+terraform -chdir=github plan  -var-file=terraform.tfvars
+terraform -chdir=github apply -var-file=terraform.tfvars</code></pre></div><div class="callout note"><span class="t">Where the state lives</span><p>Terraform keeps state in <code>github/terraform.tfstate</code> on the machine that ran it (ignored by git). For a team, use a remote backend, for example an Azure Storage account. CI checks formatting and validates the configuration on every pull request (<em>Validate Terraform (GitHub settings)</em>).</p></div>
+
+<h2 id="verify">Check your work<a class="anchor" href="#verify" aria-label="Link to this section">#</a></h2><ul class="checks"><li><code>production</code> shows <strong>1 protection rule</strong> (required reviewer) and the branch policy <code>main</code>.</li><li>Five or more repository variables exist, including the four required ones.</li><li><span class="ui">Rulesets</span> lists <code>protect-main</code> as <strong>Active</strong>. A direct push to <code>main</code> is now rejected.</li><li>If you used Terraform: <code>terraform -chdir=github plan</code> reports <strong>No changes</strong>.</li></ul>
 <h2 id="why">How it works<a class="anchor" href="#why" aria-label="Link to this section">#</a></h2><p><strong>One environment, two jobs.</strong> Both deploy jobs (<em>Deploy to Azure</em> and <em>Deploy to AKS</em>) declare <code>environment: production</code>. GitHub pauses them until a reviewer approves, and only then issues an OIDC token whose subject ends with <code>:environment:production</code>, the only subject the identity trusts for deployments. The approval gate and the Azure trust are the same control.</p><p><strong>Rulesets</strong> replace classic branch protection: they can be layered, show enforcement status, and can be applied across repositories by an organization. Required status checks keep untested code out of <code>main</code>; because deployments run only from <code>main</code>, nothing reaches the cluster without passing CI.</p>
 <h2 id="learn">Learn more<a class="anchor" href="#learn" aria-label="Link to this section">#</a></h2><ul><li><a href="https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments">Managing environments for deployment (GitHub Docs)</a></li><li><a href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-variables">Store information in variables (GitHub Docs)</a></li><li><a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets">About rulesets (GitHub Docs)</a></li><li><a href="https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-code-review">Using GitHub Copilot code review (GitHub Docs)</a></li></ul>
 <nav class="pager" aria-label="Pagination"><a href="step-03.html"><span class="dir">&larr; Previous</span>03 · Create the deployment identity</a><a class="nx" href="step-05.html"><span class="dir">Next &rarr;</span>05 · Provision with Bicep</a></nav>
 </div></main>
-<aside class="toc" aria-label="On this page"><h5>On this page</h5><a href="#goals">What you will do</a><a href="#objectid">Find your user Object ID</a><a href="#environment">Create the production environment</a><a href="#variables">Add repository variables</a><a href="#ruleset">Protect main with a ruleset</a><a href="#verify">Check your work</a><a href="#why">How it works</a><a href="#learn">Learn more</a></aside>
+<aside class="toc" aria-label="On this page"><h5>On this page</h5><a href="#goals">What you will do</a><a href="#objectid">Find your user Object ID</a><a href="#environment">Create the production environment</a><a href="#variables">Add repository variables</a><a href="#ruleset">Protect main with a ruleset</a><a href="#as-code">Do it as code</a><a href="#verify">Check your work</a><a href="#why">How it works</a><a href="#learn">Learn more</a></aside>
 </div>
 <footer class="site">Contoso Health is a fictional company. All member and hospital data is synthetic. Built for an Azure Kubernetes Service demo in <code>indonesiacentral</code> · <a href="https://github.com/ibranibeny/contoso-health-aks-demo">Source on GitHub</a></footer>
 <script src="../assets/js/site.js" defer></script>
