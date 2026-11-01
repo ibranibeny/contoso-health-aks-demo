@@ -4,6 +4,8 @@ A complete, working demo of a small **health-insurance** application on **Azure 
 
 **Step-by-step guide with a video for every step:** https://ibranibeny.github.io/contoso-health-aks-demo/
 
+**Live demo (while the environment is running):** http://contoso-health-ibranibeny.indonesiacentral.cloudapp.azure.com
+
 > Contoso Health is a fictional insurer. Every member, hospital and number in this repository is synthetic.
 
 ## What the app does
@@ -36,8 +38,8 @@ k8s/demo/       loadgen job, policy-violation pod for the governance demo
 infra/          main.bicep + modules (monitoring, acr, aks, aks-monitoring, policy)
 infra/bootstrap one-time Azure setup as code (resource group, identity, federated credentials, roles)
 github/         GitHub settings as code (Terraform: environment, variables, ruleset)
-scripts/        bootstrap.sh: steps 2-4 of the guide in one run (Azure Cloud Shell)
-.github/        workflows (ci, codeql, infra, deploy-app, demo-ops), CODEOWNERS, PR template
+scripts/        bootstrap.sh: steps 2-4 of the guide in one run (Azure Cloud Shell); guide/: evidence capture for the guide
+.github/        workflows (ci, codeql, infra, deploy-app, demo-ops, publish-guide, guide-evidence), CODEOWNERS, PR template
 docs/           the GitHub Pages guide (HTML, diagrams, videos)
 ```
 
@@ -53,6 +55,8 @@ Follow the guide. Every Azure step is shown in the **Azure portal** and every Gi
 6. Build and deploy the app (**App (build & deploy to AKS)** runs automatically).
 7. Ship a change with code review (pull request, checks, merge, what-if for infrastructure).
 8. Monitor the platform; 9. prove the guardrails; 10. clean up.
+
+The workflows read the Azure identifiers as repository **variables or secrets** (`vars.NAME || secrets.NAME`).
 
 **Prefer code for the setup?** Steps 2-4 also exist as infrastructure as code. In Azure Cloud Shell:
 
