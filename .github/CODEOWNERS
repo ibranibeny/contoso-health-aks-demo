@@ -1,4 +1,6 @@
-# Every change needs a review from a code owner (enforced by the main-branch ruleset).
+# Code owners are requested automatically as reviewers on every pull request.
+# This one-person demo requires 0 approvals (see the main-branch ruleset, guide step 4).
+# In a team, also enable "Require review from Code Owners" in the ruleset.
 *                @ibranibeny
 /infra/          @ibranibeny
 /.github/        @ibranibeny
