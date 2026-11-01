@@ -1,0 +1,91 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.632
+Langkah dua.
+
+00:00:00.682 --> 00:00:05.353
+Sebelum ada yang di-deploy, kita pastikan subscription-nya siap: resource provider,
+
+00:00:05.403 --> 00:00:08.367
+kuota v CPU, dan resource group di Indonesia Central.
+
+00:00:08.417 --> 00:00:10.330
+Di Azure portal, buka Subscriptions,
+
+00:00:10.380 --> 00:00:13.711
+lalu pilih subscription yang akan Anda gunakan untuk demo ini.
+
+00:00:13.761 --> 00:00:17.930
+Di menu subscription, cari resource providers, lalu buka halamannya.
+
+00:00:17.980 --> 00:00:19.235
+Filter menurut nama.
+
+00:00:19.285 --> 00:00:24.454
+Microsoft dot Container Service, provider untuk AKS, harus berstatus Registered.
+
+00:00:24.504 --> 00:00:29.243
+Microsoft dot Monitor mendukung Azure Monitor workspace untuk managed Prometheus.
+
+00:00:29.293 --> 00:00:30.721
+Ini juga sudah terdaftar.
+
+00:00:30.771 --> 00:00:34.350
+Microsoft dot Policy Insights dipakai oleh add-on Azure Policy.
+
+00:00:34.400 --> 00:00:38.959
+Jika provider berstatus Not Registered, pilih provider itu, lalu pilih Register.
+
+00:00:39.009 --> 00:00:40.208
+Berikutnya, kuota.
+
+00:00:40.258 --> 00:00:43.123
+Buka Quotas, lalu My quotas untuk Compute,
+
+00:00:43.173 --> 00:00:46.177
+dan atur filter region ke Indonesia Central.
+
+00:00:46.227 --> 00:00:47.482
+Cari DDS versi lima.
+
+00:00:47.532 --> 00:00:50.547
+Cluster ini perlu delapan v CPU untuk dua node,
+
+00:00:50.597 --> 00:00:53.417
+dan enam belas jika bertambah menjadi empat.
+
+00:00:55.467 --> 00:00:58.581
+Sekarang buka Resource groups, lalu pilih Create.
+
+00:00:58.631 --> 00:01:02.917
+Tetap gunakan subscription Anda, beri nama grup RG contoso health AKS,
+
+00:01:02.967 --> 00:01:04.404
+lalu buka daftar region.
+
+00:01:04.454 --> 00:01:08.487
+Pilih Indonesia Central, agar data dan komputasi tetap di Indonesia.
+
+00:01:08.537 --> 00:01:09.484
+Buka tab Tags.
+
+00:01:09.534 --> 00:01:13.828
+Tag menjadi dasar laporan biaya, dan memperjelas kepemilikan.
+
+00:01:13.878 --> 00:01:18.110
+Tambahkan tiga tag: workload, environment, dan cost center.
+
+00:01:18.160 --> 00:01:20.215
+Lalu pilih Review and create.
+
+00:01:20.265 --> 00:01:23.171
+Periksa ringkasannya, lalu pilih Create.
+
+00:01:23.221 --> 00:01:23.673
+Selesai.
+
+00:01:23.723 --> 00:01:26.680
+Semua isi demo masuk ke satu resource group ini,
+
+00:01:26.730 --> 00:01:29.500
+jadi nanti pembersihannya cukup sekali hapus.

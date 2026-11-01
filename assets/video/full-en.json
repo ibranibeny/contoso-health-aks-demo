@@ -1,0 +1,54 @@
+{
+ "lang": "en",
+ "duration": 798.458,
+ "chapters": [
+  {
+   "t": 0.0,
+   "title": "Opening"
+  },
+  {
+   "t": 24.625,
+   "title": "Step 1: Get the code and take a tour"
+  },
+  {
+   "t": 87.125,
+   "title": "Step 2: Prepare the Azure subscription"
+  },
+  {
+   "t": 174.167,
+   "title": "Step 3: Create the deployment identity"
+  },
+  {
+   "t": 374.5,
+   "title": "Step 4: Connect GitHub to Azure"
+  },
+  {
+   "t": 431.375,
+   "title": "Step 5: Provision the platform with Bicep"
+  },
+  {
+   "t": 517.208,
+   "title": "Step 6: Build and deploy the app"
+  },
+  {
+   "t": 583.125,
+   "title": "Step 7: Ship a change with code review"
+  },
+  {
+   "t": 635.875,
+   "title": "Step 8: Monitor the cluster and the app"
+  },
+  {
+   "t": 683.875,
+   "title": "Step 9: Prove the governance guardrails"
+  },
+  {
+   "t": 749.083,
+   "title": "Step 10: Clean up"
+  },
+  {
+   "t": 778.833,
+   "title": "Summary"
+  }
+ ]
+}

@@ -1,0 +1,55 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.674
+Langkah satu.
+
+00:00:00.724 --> 00:00:05.296
+Semua isi demo ini ada di satu repositori GitHub: aplikasinya, manifest Kubernetes,
+
+00:00:05.346 --> 00:00:08.415
+templat Bicep, dan workflow yang menghubungkan semuanya.
+
+00:00:08.465 --> 00:00:09.935
+Ini repositori templatnya.
+
+00:00:09.985 --> 00:00:14.553
+Setelah masuk ke GitHub, pilih Use this template, lalu Create a new repository,
+
+00:00:14.603 --> 00:00:16.365
+dan Anda punya salinan sendiri.
+
+00:00:16.415 --> 00:00:21.859
+Folder src berisi tiga layanan kecil berbasis Node.js: membership API, bed API,
+
+00:00:21.909 --> 00:00:22.624
+dan portal.
+
+00:00:22.674 --> 00:00:27.299
+Di k8s base ada manifest Kubernetes: deployment, service, autoscaler,
+
+00:00:27.349 --> 00:00:29.874
+disruption budget, dan network policy.
+
+00:00:29.924 --> 00:00:32.683
+Folder infra berisi templat Bicep beserta modulnya.
+
+00:00:32.733 --> 00:00:36.649
+Folder bootstrap menyimpan penyiapan Azure satu kali, dalam bentuk kode.
+
+00:00:36.699 --> 00:00:40.634
+Ada tujuh workflow, mulai dari CI dan Code QL hingga infrastruktur,
+
+00:00:40.684 --> 00:00:44.204
+delivery aplikasi, skenario demo, dan publikasi panduan ini.
+
+00:00:44.254 --> 00:00:48.262
+Langkah tiga butuh dua angka: ID repositori dan ID pemilik.
+
+00:00:48.312 --> 00:00:50.944
+Keduanya bisa dilihat lewat API GitHub.
+
+00:00:51.994 --> 00:00:56.027
+README berisi tautan kembali ke panduan ini, dan merangkum cakupan demo.
+
+00:00:56.077 --> 00:01:00.850
+Dan panduan ini sendiri diterbitkan dari repositori yang sama, dengan GitHub Pages.

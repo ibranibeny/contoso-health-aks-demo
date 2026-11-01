@@ -1,0 +1,211 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.584
+Step three.
+
+00:00:00.634 --> 00:00:03.930
+We create the identity that GitHub Actions uses to deploy.
+
+00:00:03.980 --> 00:00:06.525
+There are no passwords and no client secrets.
+
+00:00:06.575 --> 00:00:10.217
+GitHub proves who it is with a short-lived OpenID Connect token.
+
+00:00:10.267 --> 00:00:14.000
+In the portal search bar, type Managed Identities, and open the service.
+
+00:00:14.050 --> 00:00:14.883
+Select Create.
+
+00:00:14.933 --> 00:00:20.179
+GitHub Actions will sign in as this identity, so no secret is ever stored in GitHub.
+
+00:00:20.229 --> 00:00:23.426
+On the Basics tab, pick the resource group we just created.
+
+00:00:23.476 --> 00:00:26.715
+Name it ID github contoso health, keep Indonesia Central,
+
+00:00:26.765 --> 00:00:28.389
+and select Review and create.
+
+00:00:28.439 --> 00:00:30.918
+Review the settings, and select Create.
+
+00:00:30.968 --> 00:00:33.372
+The deployment completes in a few seconds.
+
+00:00:33.422 --> 00:00:34.657
+Select Go to resource.
+
+00:00:34.707 --> 00:00:37.151
+The identity now sits in our resource group.
+
+00:00:37.201 --> 00:00:37.605
+Open it.
+
+00:00:37.655 --> 00:00:40.644
+On the overview, note the Client ID and the Object ID.
+
+00:00:40.694 --> 00:00:42.670
+They go into GitHub variables later.
+
+00:00:42.720 --> 00:00:45.653
+They identify the identity, but they are not secrets.
+
+00:00:47.203 --> 00:00:49.683
+Under Settings, open Federated credentials.
+
+00:00:49.733 --> 00:00:53.213
+This is where Azure learns to trust tokens issued by GitHub.
+
+00:00:53.263 --> 00:00:55.869
+Nothing is configured yet. Select Add credential.
+
+00:00:55.919 --> 00:01:00.204
+We'll add three: the production environment, pull requests, and the main branch.
+
+00:01:00.254 --> 00:01:04.192
+For the scenario, choose GitHub Actions deploying Azure resources.
+
+00:01:04.242 --> 00:01:06.938
+The form uses GitHub's immutable subject format,
+
+00:01:06.988 --> 00:01:10.598
+which includes the numeric I Ds of the owner and the repository.
+
+00:01:10.648 --> 00:01:13.115
+New repositories use this format by default.
+
+00:01:14.165 --> 00:01:17.444
+Enter the owner and the repository, with their I Ds.
+
+00:01:17.494 --> 00:01:19.364
+Both come from the GitHub API.
+
+00:01:19.414 --> 00:01:21.092
+For the entity, choose Environment.
+
+00:01:21.142 --> 00:01:24.646
+Jobs that declare the production environment will match this credential.
+
+00:01:24.696 --> 00:01:25.509
+Type production.
+
+00:01:25.559 --> 00:01:27.883
+The subject identifier is generated for you.
+
+00:01:27.933 --> 00:01:31.281
+Name the credential, keep the default audience, and select Add.
+
+00:01:31.331 --> 00:01:32.973
+One credential is in place.
+
+00:01:33.023 --> 00:01:36.295
+Now repeat twice, with the same owner and repository.
+
+00:01:37.845 --> 00:01:40.379
+The second credential uses the Pull request entity.
+
+00:01:40.429 --> 00:01:43.115
+The Bicep what-if check runs on pull requests with it.
+
+00:01:43.165 --> 00:01:46.227
+The third uses the Branch entity, with the value main,
+
+00:01:46.277 --> 00:01:48.013
+for image builds and demo jobs.
+
+00:01:48.063 --> 00:01:48.959
+Three credentials.
+
+00:01:49.009 --> 00:01:51.954
+Nothing else in GitHub can get a token for this identity.
+
+00:01:53.004 --> 00:01:54.374
+Now we grant permissions.
+
+00:01:54.424 --> 00:01:58.349
+Open the resource group, then Access control, and Add role assignment.
+
+00:01:58.399 --> 00:01:59.865
+Role one is Contributor.
+
+00:01:59.915 --> 00:02:04.032
+It deploys resources, but it cannot grant access or assign policy.
+
+00:02:04.082 --> 00:02:08.090
+On Members, choose Managed identity, select members, and pick our identity.
+
+00:02:08.140 --> 00:02:10.463
+The identity is listed as the member.
+
+00:02:10.513 --> 00:02:12.066
+Select Review and assign.
+
+00:02:12.116 --> 00:02:13.196
+Check the summary.
+
+00:02:13.246 --> 00:02:16.209
+Contributor, scoped to this resource group only.
+
+00:02:16.259 --> 00:02:17.779
+Select Review and assign.
+
+00:02:17.829 --> 00:02:19.888
+Role two is Resource Policy Contributor.
+
+00:02:19.938 --> 00:02:23.211
+It lets the Bicep template create the Azure Policy assignments.
+
+00:02:23.261 --> 00:02:26.014
+Role three is Role Based Access Control Administrator.
+
+00:02:26.064 --> 00:02:30.115
+Bicep creates two role assignments, so we allow exactly that, and nothing more.
+
+00:02:30.165 --> 00:02:34.397
+On Conditions, keep the option that only allows selected roles for selected
+
+00:02:34.447 --> 00:02:36.966
+principals. Then select roles and principals.
+
+00:02:37.016 --> 00:02:41.091
+Pick the template Constrain roles and principal types, and select Configure.
+
+00:02:41.141 --> 00:02:46.351
+Add the role ACR Pull, and then Azure Kubernetes Service RBAC Cluster Admin.
+
+00:02:46.401 --> 00:02:50.249
+For principal types, tick Users and Service principals.
+
+00:02:50.299 --> 00:02:52.375
+Groups stays off. Select Save.
+
+00:02:52.425 --> 00:02:55.572
+The template now shows Configured. Select Save.
+
+00:02:55.622 --> 00:02:57.023
+The condition is attached.
+
+00:02:57.073 --> 00:02:59.535
+The identity can only assign these two roles,
+
+00:02:59.585 --> 00:03:01.767
+and only to users or service principals.
+
+00:03:01.817 --> 00:03:04.933
+Review the assignment, and select Review and assign.
+
+00:03:04.983 --> 00:03:07.495
+The notification confirms the new assignment.
+
+00:03:07.545 --> 00:03:10.415
+On the Role assignments tab, search for the identity.
+
+00:03:10.465 --> 00:03:13.446
+Exactly three roles, all scoped to this resource group,
+
+00:03:13.496 --> 00:03:15.320
+and nothing at subscription level.

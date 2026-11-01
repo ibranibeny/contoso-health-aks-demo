@@ -1,0 +1,64 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.453
+Step six.
+
+00:00:00.503 --> 00:00:04.313
+When the infrastructure is ready, the app workflow starts on its own.
+
+00:00:04.363 --> 00:00:07.846
+It builds three images and pushes them to the private registry.
+
+00:00:07.896 --> 00:00:11.154
+Then the rollout waits for approval at the production gate.
+
+00:00:12.204 --> 00:00:15.902
+Once approved, the job rolls out the release, waits for every deployment,
+
+00:00:15.952 --> 00:00:17.750
+and smoke-tests the public endpoint.
+
+00:00:17.800 --> 00:00:20.866
+The production environment now points to the live URL.
+
+00:00:20.916 --> 00:00:23.854
+In the cluster: three deployments, two replicas each,
+
+00:00:23.904 --> 00:00:26.109
+with autoscalers and disruption budgets.
+
+00:00:26.159 --> 00:00:29.078
+Only the portal is exposed through a load balancer.
+
+00:00:29.128 --> 00:00:30.534
+Both AP Is stay internal.
+
+00:00:30.584 --> 00:00:34.124
+The two nodes run in different availability zones of Indonesia Central.
+
+00:00:34.174 --> 00:00:38.034
+And here is Contoso Health: three hundred and sixty members, who has paid,
+
+00:00:38.084 --> 00:00:40.518
+who is due by the tenth, and who is in arrears.
+
+00:00:40.568 --> 00:00:44.210
+Filter on Not paid, to see members in arrears, and what they owe.
+
+00:00:44.260 --> 00:00:48.372
+Open a member for the details: contribution, payer, months in arrears,
+
+00:00:48.422 --> 00:00:50.156
+and a year of payment history.
+
+00:00:50.206 --> 00:00:54.475
+The second tab shows free beds per class, across twenty two hospitals.
+
+00:00:54.524 --> 00:00:57.545
+And the same per hospital, refreshed every few minutes.
+
+00:00:57.595 --> 00:01:01.045
+The info endpoint shows the version, which is the commit, plus the region,
+
+00:01:01.095 --> 00:01:02.890
+the cluster, and the pod that answered.

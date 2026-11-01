@@ -1,0 +1,775 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:03.131
+This is the full Contoso Health demo on Azure Kubernetes Service,
+
+00:00:03.181 --> 00:00:04.698
+in the Indonesia Central region.
+
+00:00:04.748 --> 00:00:08.760
+In ten steps we prepare the subscription and a deployment identity without secrets,
+
+00:00:08.810 --> 00:00:11.207
+connect GitHub, provision the platform with Bicep,
+
+00:00:11.257 --> 00:00:14.340
+ship the app through pull requests, watch it with Azure Monitor,
+
+00:00:14.390 --> 00:00:17.276
+prove the Azure Policy guardrails, and finish with clean-up.
+
+00:00:17.326 --> 00:00:19.821
+Steps two to four were recorded in the Azure portal;
+
+00:00:19.871 --> 00:00:21.975
+the other steps show the real automated run.
+
+00:00:22.025 --> 00:00:23.590
+All data in the app is synthetic.
+
+00:00:24.625 --> 00:00:25.035
+Step one.
+
+00:00:25.085 --> 00:00:28.310
+Everything in this demo lives in one GitHub repository: the app,
+
+00:00:28.360 --> 00:00:32.556
+the Kubernetes manifests, the Bicep templates, and the workflows that connect them.
+
+00:00:32.606 --> 00:00:34.293
+This is the template repository.
+
+00:00:34.343 --> 00:00:38.418
+Signed in to GitHub, select Use this template, then Create a new repository,
+
+00:00:38.468 --> 00:00:39.883
+and you have your own copy.
+
+00:00:39.933 --> 00:00:46.213
+The src folder holds three small Node.js services: the membership API, the bed API,
+
+00:00:46.263 --> 00:00:47.357
+and the portal.
+
+00:00:47.407 --> 00:00:52.305
+Under k8s base are the Kubernetes manifests: deployments, services, autoscalers,
+
+00:00:52.355 --> 00:00:54.841
+disruption budgets, and network policies.
+
+00:00:54.891 --> 00:00:57.921
+The infra folder has the Bicep template and its modules.
+
+00:00:57.971 --> 00:01:01.277
+The bootstrap folder holds the one-time Azure setup, as code.
+
+00:01:01.327 --> 00:01:05.616
+There are seven workflows, from CI and Code QL to infrastructure, app delivery,
+
+00:01:05.666 --> 00:01:08.307
+demo scenarios, and the publishing of this guide.
+
+00:01:08.357 --> 00:01:12.944
+Step three needs two numbers: the repository ID and the owner ID.
+
+00:01:12.994 --> 00:01:14.799
+The GitHub API shows both.
+
+00:01:15.849 --> 00:01:19.779
+The README links back to this guide and summarises what the demo covers.
+
+00:01:19.829 --> 00:01:24.085
+And this guide itself is published from the same repository, with GitHub Pages.
+
+00:01:27.125 --> 00:01:27.593
+Step two.
+
+00:01:27.643 --> 00:01:31.907
+Before we deploy anything, we make sure the subscription is ready: resource
+
+00:01:31.957 --> 00:01:35.704
+providers, v CPU quota, and a resource group in Indonesia Central.
+
+00:01:35.754 --> 00:01:37.838
+In the Azure portal, open Subscriptions,
+
+00:01:37.888 --> 00:01:40.667
+and select the subscription you'll use for this demo.
+
+00:01:40.717 --> 00:01:44.957
+In the subscription menu, search for resource providers, and open that page.
+
+00:01:45.007 --> 00:01:45.972
+Filter by name.
+
+00:01:46.022 --> 00:01:50.844
+Microsoft dot Container Service, the AKS provider, must show Registered.
+
+00:01:50.894 --> 00:01:55.538
+Microsoft dot Monitor powers the Azure Monitor workspace for managed Prometheus.
+
+00:01:55.588 --> 00:01:56.711
+It's registered too.
+
+00:01:56.761 --> 00:02:00.437
+Microsoft dot Policy Insights is used by the Azure Policy add-on.
+
+00:02:00.487 --> 00:02:04.219
+If a provider shows Not Registered, select it and choose Register.
+
+00:02:04.269 --> 00:02:04.963
+Next, quota.
+
+00:02:05.013 --> 00:02:07.443
+Open Quotas, then My quotas for Compute,
+
+00:02:07.493 --> 00:02:10.356
+and set the region filter to Indonesia Central.
+
+00:02:10.406 --> 00:02:12.019
+Search for DDS version 5.
+
+00:02:12.069 --> 00:02:17.605
+The cluster needs eight v CP Us for two nodes, and sixteen if it scales out to four.
+
+00:02:19.655 --> 00:02:22.467
+Now open Resource groups, and select Create.
+
+00:02:22.517 --> 00:02:26.339
+Keep your subscription, name the group RG contoso health AKS,
+
+00:02:26.389 --> 00:02:27.926
+and open the region list.
+
+00:02:27.976 --> 00:02:31.770
+Choose Indonesia Central, so data and compute stay in Indonesia.
+
+00:02:31.820 --> 00:02:32.825
+Open the Tags tab.
+
+00:02:32.875 --> 00:02:36.286
+Tags drive cost reporting, and they make ownership obvious.
+
+00:02:36.336 --> 00:02:40.178
+Add three tags: workload, environment, and cost center.
+
+00:02:40.228 --> 00:02:42.301
+Then select Review and create.
+
+00:02:42.351 --> 00:02:44.482
+Check the summary, and select Create.
+
+00:02:44.532 --> 00:02:44.764
+Done.
+
+00:02:44.814 --> 00:02:48.037
+Everything for this demo lands in this one resource group,
+
+00:02:48.087 --> 00:02:50.125
+so clean-up later is a single delete.
+
+00:02:54.167 --> 00:02:54.751
+Step three.
+
+00:02:54.801 --> 00:02:58.097
+We create the identity that GitHub Actions uses to deploy.
+
+00:02:58.147 --> 00:03:00.692
+There are no passwords and no client secrets.
+
+00:03:00.742 --> 00:03:04.384
+GitHub proves who it is with a short-lived OpenID Connect token.
+
+00:03:04.434 --> 00:03:08.167
+In the portal search bar, type Managed Identities, and open the service.
+
+00:03:08.217 --> 00:03:09.050
+Select Create.
+
+00:03:09.100 --> 00:03:14.346
+GitHub Actions will sign in as this identity, so no secret is ever stored in GitHub.
+
+00:03:14.396 --> 00:03:17.593
+On the Basics tab, pick the resource group we just created.
+
+00:03:17.643 --> 00:03:20.882
+Name it ID github contoso health, keep Indonesia Central,
+
+00:03:20.932 --> 00:03:22.556
+and select Review and create.
+
+00:03:22.606 --> 00:03:25.085
+Review the settings, and select Create.
+
+00:03:25.135 --> 00:03:27.539
+The deployment completes in a few seconds.
+
+00:03:27.589 --> 00:03:28.824
+Select Go to resource.
+
+00:03:28.874 --> 00:03:31.318
+The identity now sits in our resource group.
+
+00:03:31.368 --> 00:03:31.772
+Open it.
+
+00:03:31.822 --> 00:03:34.811
+On the overview, note the Client ID and the Object ID.
+
+00:03:34.861 --> 00:03:36.837
+They go into GitHub variables later.
+
+00:03:36.887 --> 00:03:39.820
+They identify the identity, but they are not secrets.
+
+00:03:41.370 --> 00:03:43.850
+Under Settings, open Federated credentials.
+
+00:03:43.900 --> 00:03:47.380
+This is where Azure learns to trust tokens issued by GitHub.
+
+00:03:47.430 --> 00:03:50.036
+Nothing is configured yet. Select Add credential.
+
+00:03:50.086 --> 00:03:54.371
+We'll add three: the production environment, pull requests, and the main branch.
+
+00:03:54.421 --> 00:03:58.359
+For the scenario, choose GitHub Actions deploying Azure resources.
+
+00:03:58.409 --> 00:04:01.105
+The form uses GitHub's immutable subject format,
+
+00:04:01.155 --> 00:04:04.765
+which includes the numeric I Ds of the owner and the repository.
+
+00:04:04.815 --> 00:04:07.282
+New repositories use this format by default.
+
+00:04:08.332 --> 00:04:11.611
+Enter the owner and the repository, with their I Ds.
+
+00:04:11.661 --> 00:04:13.531
+Both come from the GitHub API.
+
+00:04:13.581 --> 00:04:15.259
+For the entity, choose Environment.
+
+00:04:15.309 --> 00:04:18.813
+Jobs that declare the production environment will match this credential.
+
+00:04:18.863 --> 00:04:19.676
+Type production.
+
+00:04:19.726 --> 00:04:22.050
+The subject identifier is generated for you.
+
+00:04:22.100 --> 00:04:25.448
+Name the credential, keep the default audience, and select Add.
+
+00:04:25.498 --> 00:04:27.140
+One credential is in place.
+
+00:04:27.190 --> 00:04:30.462
+Now repeat twice, with the same owner and repository.
+
+00:04:32.012 --> 00:04:34.546
+The second credential uses the Pull request entity.
+
+00:04:34.596 --> 00:04:37.282
+The Bicep what-if check runs on pull requests with it.
+
+00:04:37.332 --> 00:04:40.394
+The third uses the Branch entity, with the value main,
+
+00:04:40.444 --> 00:04:42.180
+for image builds and demo jobs.
+
+00:04:42.230 --> 00:04:43.126
+Three credentials.
+
+00:04:43.176 --> 00:04:46.121
+Nothing else in GitHub can get a token for this identity.
+
+00:04:47.171 --> 00:04:48.541
+Now we grant permissions.
+
+00:04:48.591 --> 00:04:52.516
+Open the resource group, then Access control, and Add role assignment.
+
+00:04:52.566 --> 00:04:54.032
+Role one is Contributor.
+
+00:04:54.082 --> 00:04:58.199
+It deploys resources, but it cannot grant access or assign policy.
+
+00:04:58.249 --> 00:05:02.257
+On Members, choose Managed identity, select members, and pick our identity.
+
+00:05:02.307 --> 00:05:04.630
+The identity is listed as the member.
+
+00:05:04.680 --> 00:05:06.233
+Select Review and assign.
+
+00:05:06.283 --> 00:05:07.363
+Check the summary.
+
+00:05:07.413 --> 00:05:10.376
+Contributor, scoped to this resource group only.
+
+00:05:10.426 --> 00:05:11.946
+Select Review and assign.
+
+00:05:11.996 --> 00:05:14.055
+Role two is Resource Policy Contributor.
+
+00:05:14.105 --> 00:05:17.378
+It lets the Bicep template create the Azure Policy assignments.
+
+00:05:17.428 --> 00:05:20.181
+Role three is Role Based Access Control Administrator.
+
+00:05:20.231 --> 00:05:24.282
+Bicep creates two role assignments, so we allow exactly that, and nothing more.
+
+00:05:24.332 --> 00:05:28.564
+On Conditions, keep the option that only allows selected roles for selected
+
+00:05:28.614 --> 00:05:31.133
+principals. Then select roles and principals.
+
+00:05:31.183 --> 00:05:35.258
+Pick the template Constrain roles and principal types, and select Configure.
+
+00:05:35.308 --> 00:05:40.518
+Add the role ACR Pull, and then Azure Kubernetes Service RBAC Cluster Admin.
+
+00:05:40.568 --> 00:05:44.416
+For principal types, tick Users and Service principals.
+
+00:05:44.466 --> 00:05:46.542
+Groups stays off. Select Save.
+
+00:05:46.592 --> 00:05:49.739
+The template now shows Configured. Select Save.
+
+00:05:49.789 --> 00:05:51.190
+The condition is attached.
+
+00:05:51.240 --> 00:05:53.702
+The identity can only assign these two roles,
+
+00:05:53.752 --> 00:05:55.934
+and only to users or service principals.
+
+00:05:55.984 --> 00:05:59.100
+Review the assignment, and select Review and assign.
+
+00:05:59.150 --> 00:06:01.662
+The notification confirms the new assignment.
+
+00:06:01.712 --> 00:06:04.582
+On the Role assignments tab, search for the identity.
+
+00:06:04.632 --> 00:06:07.613
+Exactly three roles, all scoped to this resource group,
+
+00:06:07.663 --> 00:06:09.487
+and nothing at subscription level.
+
+00:06:14.500 --> 00:06:16.926
+Step four. We connect the repository to Azure,
+
+00:06:16.976 --> 00:06:19.834
+and we put guardrails on how changes reach production.
+
+00:06:19.884 --> 00:06:23.495
+In Microsoft Entra ID, find your own user, and copy the object ID.
+
+00:06:23.545 --> 00:06:27.656
+The template uses it to give you access to the cluster views in the portal.
+
+00:06:27.706 --> 00:06:28.896
+Copy the Object ID.
+
+00:06:28.946 --> 00:06:31.638
+It becomes the admin principal ID setting.
+
+00:06:31.688 --> 00:06:35.241
+In the repository settings, create an environment called production.
+
+00:06:35.291 --> 00:06:37.595
+Tick Required reviewers, and add yourself.
+
+00:06:37.645 --> 00:06:40.956
+Deploy jobs that target production now wait for an approval.
+
+00:06:41.006 --> 00:06:44.088
+Here is what this repository ended up with: the production gate,
+
+00:06:44.138 --> 00:06:48.051
+five encrypted secrets with the Azure identifiers, and an active ruleset on main.
+
+00:06:49.101 --> 00:06:50.821
+The same settings exist as code.
+
+00:06:50.871 --> 00:06:54.085
+This Terraform file declares the environment, its reviewer,
+
+00:06:54.135 --> 00:06:55.856
+and the main-only branch policy.
+
+00:06:55.906 --> 00:07:00.603
+And the ruleset: pull requests, eleven required status checks, no force pushes,
+
+00:07:00.653 --> 00:07:01.564
+and no deletion.
+
+00:07:01.614 --> 00:07:04.653
+The workflows read the identifiers from variables or secrets,
+
+00:07:04.703 --> 00:07:08.350
+and a first job checks that Azure is connected before anything else runs.
+
+00:07:11.375 --> 00:07:11.861
+Step five.
+
+00:07:11.911 --> 00:07:15.773
+The whole platform comes from one Bicep template, deployed by a workflow,
+
+00:07:15.823 --> 00:07:16.791
+behind an approval.
+
+00:07:16.841 --> 00:07:21.945
+The Infrastructure workflow runs on changes under infra, on demand, or from the API.
+
+00:07:21.995 --> 00:07:24.301
+Its deploy job targets the production environment,
+
+00:07:24.351 --> 00:07:27.036
+so it waits for approval before it can get an Azure token.
+
+00:07:27.086 --> 00:07:31.685
+Main dot bicep wires five modules: monitoring, the registry, the cluster,
+
+00:07:31.735 --> 00:07:33.596
+observability, and guardrails.
+
+00:07:33.646 --> 00:07:38.237
+The cluster resource sets Entra ID with Azure RBAC, local accounts off,
+
+00:07:38.287 --> 00:07:42.812
+Azure CNI Overlay with Cilium, availability zones, and the autoscaler.
+
+00:07:42.862 --> 00:07:46.058
+After approval, the job signs in with OpenID Connect,
+
+00:07:46.108 --> 00:07:48.263
+and runs az deployment group create.
+
+00:07:48.313 --> 00:07:49.397
+The first run failed.
+
+00:07:49.447 --> 00:07:53.828
+The approval is on record, and the failing operation is reported right on the run:
+
+00:07:53.878 --> 00:07:57.124
+a Kubernetes policy rejected a custom non-compliance message.
+
+00:07:58.174 --> 00:08:00.004
+The fix is in policy dot bicep.
+
+00:08:00.054 --> 00:08:04.735
+Kubernetes-mode assignments get no custom message; Gatekeeper returns its own.
+
+00:08:04.785 --> 00:08:06.071
+The second run succeeded.
+
+00:08:06.121 --> 00:08:09.224
+The summary shows the approval, and the deployment outputs.
+
+00:08:09.274 --> 00:08:13.164
+In the resource group, the deployment history tells the same story: infra four
+
+00:08:13.214 --> 00:08:16.852
+stopped at one assignment, and infra five finished the job incrementally.
+
+00:08:16.902 --> 00:08:20.655
+This is what exists now: the cluster, the registry, Log Analytics,
+
+00:08:20.705 --> 00:08:24.572
+the Azure Monitor workspace, data collection rules, and rule groups.
+
+00:08:24.622 --> 00:08:29.547
+And the cluster, read back from Azure: Kubernetes 1.36, Azure RBAC,
+
+00:08:29.597 --> 00:08:33.185
+local accounts disabled, Cilium, and three zones.
+
+00:08:37.208 --> 00:08:37.661
+Step six.
+
+00:08:37.711 --> 00:08:41.521
+When the infrastructure is ready, the app workflow starts on its own.
+
+00:08:41.571 --> 00:08:45.054
+It builds three images and pushes them to the private registry.
+
+00:08:45.104 --> 00:08:48.362
+Then the rollout waits for approval at the production gate.
+
+00:08:49.412 --> 00:08:53.110
+Once approved, the job rolls out the release, waits for every deployment,
+
+00:08:53.160 --> 00:08:54.958
+and smoke-tests the public endpoint.
+
+00:08:55.008 --> 00:08:58.074
+The production environment now points to the live URL.
+
+00:08:58.124 --> 00:09:01.062
+In the cluster: three deployments, two replicas each,
+
+00:09:01.112 --> 00:09:03.317
+with autoscalers and disruption budgets.
+
+00:09:03.367 --> 00:09:06.286
+Only the portal is exposed through a load balancer.
+
+00:09:06.336 --> 00:09:07.742
+Both AP Is stay internal.
+
+00:09:07.792 --> 00:09:11.332
+The two nodes run in different availability zones of Indonesia Central.
+
+00:09:11.382 --> 00:09:15.242
+And here is Contoso Health: three hundred and sixty members, who has paid,
+
+00:09:15.292 --> 00:09:17.726
+who is due by the tenth, and who is in arrears.
+
+00:09:17.776 --> 00:09:21.418
+Filter on Not paid, to see members in arrears, and what they owe.
+
+00:09:21.468 --> 00:09:25.580
+Open a member for the details: contribution, payer, months in arrears,
+
+00:09:25.630 --> 00:09:27.364
+and a year of payment history.
+
+00:09:27.414 --> 00:09:31.683
+The second tab shows free beds per class, across twenty two hospitals.
+
+00:09:31.732 --> 00:09:34.753
+And the same per hospital, refreshed every few minutes.
+
+00:09:34.803 --> 00:09:38.253
+The info endpoint shows the version, which is the commit, plus the region,
+
+00:09:38.303 --> 00:09:40.098
+the cluster, and the pod that answered.
+
+00:09:43.125 --> 00:09:43.679
+Step seven.
+
+00:09:43.729 --> 00:09:48.016
+A change goes to production the way a team would ship it: branch, pull request,
+
+00:09:48.066 --> 00:09:49.773
+checks, review, merge, approval.
+
+00:09:49.823 --> 00:09:52.514
+Pull request four changes one paragraph of the portal.
+
+00:09:52.564 --> 00:09:56.321
+The template asks what changed, how it was tested, and how to roll it back.
+
+00:09:56.371 --> 00:10:00.047
+The files changed tab shows the exact diff the reviewer approves.
+
+00:10:00.097 --> 00:10:03.276
+It merged only after the checks passed: twelve checks,
+
+00:10:03.326 --> 00:10:05.787
+including the eleven the ruleset requires.
+
+00:10:05.837 --> 00:10:07.647
+The merge started the app workflow.
+
+00:10:07.697 --> 00:10:09.932
+After approval, the new version rolled out.
+
+00:10:09.982 --> 00:10:12.308
+And it is live: the new sentence is there,
+
+00:10:12.358 --> 00:10:14.911
+and the version badge shows the merged commit.
+
+00:10:15.961 --> 00:10:20.174
+Pull request five changes infrastructure: the autoscaler maximum goes from four to
+
+00:10:20.224 --> 00:10:20.434
+five.
+
+00:10:20.484 --> 00:10:23.241
+The what-if job runs with the pull-request credential.
+
+00:10:23.291 --> 00:10:25.360
+Its comment lists what would change.
+
+00:10:25.410 --> 00:10:27.597
+The cluster shows Modify, as expected.
+
+00:10:27.647 --> 00:10:31.835
+Some other rows are what-if noise, so read the details before you merge.
+
+00:10:35.875 --> 00:10:36.435
+Step eight.
+
+00:10:36.485 --> 00:10:38.817
+Monitoring was switched on by the template.
+
+00:10:38.867 --> 00:10:41.976
+Now we break something, on purpose, and watch it surface.
+
+00:10:42.026 --> 00:10:46.461
+Two agents run in the cluster: AMA metrics scrapes Prometheus metrics,
+
+00:10:46.511 --> 00:10:48.832
+and AMA logs collects container logs.
+
+00:10:48.882 --> 00:10:53.039
+The alert rules are code too: a Prometheus rule group in the monitoring module.
+
+00:10:53.089 --> 00:10:55.800
+The demo scenarios workflow starts a load test,
+
+00:10:55.850 --> 00:11:00.146
+and then injects a fault: thirty percent of membership API calls now fail.
+
+00:11:00.196 --> 00:11:04.257
+In Log Analytics, the requests by service and status show the five-oh-threes from
+
+00:11:04.307 --> 00:11:04.764
+the fault.
+
+00:11:05.814 --> 00:11:10.309
+Errors per five minutes jump right after the fault, at nineteen thirty four UTC.
+
+00:11:10.359 --> 00:11:13.858
+Seven minutes later, the high five x x rate alert fired,
+
+00:11:13.908 --> 00:11:15.822
+once for each affected service.
+
+00:11:16.872 --> 00:11:20.855
+And resource use stays small under this load: a few millicores per pod.
+
+00:11:23.875 --> 00:11:26.964
+Step nine. Guardrails only matter if they say no.
+
+00:11:27.014 --> 00:11:28.053
+Let us test them.
+
+00:11:28.103 --> 00:11:32.172
+The template assigns three Azure policies: the pod security baseline,
+
+00:11:32.222 --> 00:11:34.440
+allowed images, and allowed locations.
+
+00:11:34.490 --> 00:11:38.225
+Read back from Azure, all three are enforced on the resource group.
+
+00:11:38.275 --> 00:11:42.507
+Inside the cluster, the Azure Policy add-on turned them into Gatekeeper constraints.
+
+00:11:42.557 --> 00:11:46.886
+The test pod uses an nginx image from Docker Hub, and asks to run privileged.
+
+00:11:46.936 --> 00:11:50.203
+Denied at admission: the image is not from the approved registry,
+
+00:11:50.253 --> 00:11:52.347
+and privileged containers are not allowed.
+
+00:11:53.397 --> 00:11:57.041
+The second test validates a network security group in East US.
+
+00:11:57.091 --> 00:12:00.492
+Denied by Allowed locations, with the Contoso Health message.
+
+00:12:00.542 --> 00:12:03.152
+It was validation only, so nothing was created.
+
+00:12:04.202 --> 00:12:07.187
+The namespace also carries Pod Security Admission labels,
+
+00:12:07.237 --> 00:12:09.956
+which warn and audit against the restricted profile.
+
+00:12:10.006 --> 00:12:12.713
+Network policies deny all ingress by default,
+
+00:12:12.763 --> 00:12:15.224
+and then allow only what each tier needs.
+
+00:12:15.274 --> 00:12:18.778
+The GitHub identity holds three roles, on this resource group only.
+
+00:12:18.828 --> 00:12:21.006
+One of them is constrained by a condition.
+
+00:12:21.056 --> 00:12:24.008
+And the activity log ties every change to that identity,
+
+00:12:24.058 --> 00:12:26.045
+including the one failed policy write.
+
+00:12:29.083 --> 00:12:29.557
+Step ten.
+
+00:12:29.607 --> 00:12:34.094
+Clean-up is short, because the demo keeps its resources in one resource group.
+
+00:12:34.144 --> 00:12:36.571
+While the demo runs, the nodes, the load balancer,
+
+00:12:36.621 --> 00:12:38.998
+the registry and monitoring ingestion are billed.
+
+00:12:39.048 --> 00:12:41.920
+Stop the cluster between sessions to save the compute cost.
+
+00:12:41.970 --> 00:12:44.560
+When you are done, delete the resource group in the portal,
+
+00:12:44.610 --> 00:12:46.127
+or with one command in Cloud Shell.
+
+00:12:46.177 --> 00:12:49.796
+Then check for the managed resource group that Azure created for the Azure Monitor
+
+00:12:49.846 --> 00:12:50.243
+workspace.
+
+00:12:50.293 --> 00:12:53.823
+We did not run the clean-up here, because the demo stays up for the walkthrough.
+
+00:12:58.833 --> 00:12:59.871
+That is the full demo.
+
+00:12:59.921 --> 00:13:03.727
+The platform is defined in code, every change goes through a pull request with
+
+00:13:03.777 --> 00:13:06.792
+checks, and every production deployment waits for an approval.
+
+00:13:06.842 --> 00:13:10.549
+Azure Monitor watches the cluster, and Azure Policy enforces the guardrails.
+
+00:13:10.599 --> 00:13:14.454
+The guide, the code and the workflows are in one GitHub repository that you can
+
+00:13:14.504 --> 00:13:15.443
+reuse as a template.

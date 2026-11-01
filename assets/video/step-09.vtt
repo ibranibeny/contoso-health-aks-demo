@@ -1,0 +1,61 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:03.089
+Step nine. Guardrails only matter if they say no.
+
+00:00:03.139 --> 00:00:04.178
+Let us test them.
+
+00:00:04.228 --> 00:00:08.297
+The template assigns three Azure policies: the pod security baseline,
+
+00:00:08.347 --> 00:00:10.565
+allowed images, and allowed locations.
+
+00:00:10.615 --> 00:00:14.350
+Read back from Azure, all three are enforced on the resource group.
+
+00:00:14.400 --> 00:00:18.632
+Inside the cluster, the Azure Policy add-on turned them into Gatekeeper constraints.
+
+00:00:18.682 --> 00:00:23.011
+The test pod uses an nginx image from Docker Hub, and asks to run privileged.
+
+00:00:23.061 --> 00:00:26.328
+Denied at admission: the image is not from the approved registry,
+
+00:00:26.378 --> 00:00:28.472
+and privileged containers are not allowed.
+
+00:00:29.522 --> 00:00:33.166
+The second test validates a network security group in East US.
+
+00:00:33.216 --> 00:00:36.617
+Denied by Allowed locations, with the Contoso Health message.
+
+00:00:36.667 --> 00:00:39.277
+It was validation only, so nothing was created.
+
+00:00:40.327 --> 00:00:43.312
+The namespace also carries Pod Security Admission labels,
+
+00:00:43.362 --> 00:00:46.081
+which warn and audit against the restricted profile.
+
+00:00:46.131 --> 00:00:48.838
+Network policies deny all ingress by default,
+
+00:00:48.888 --> 00:00:51.349
+and then allow only what each tier needs.
+
+00:00:51.399 --> 00:00:54.903
+The GitHub identity holds three roles, on this resource group only.
+
+00:00:54.953 --> 00:00:57.131
+One of them is constrained by a condition.
+
+00:00:57.181 --> 00:01:00.133
+And the activity log ties every change to that identity,
+
+00:01:00.183 --> 00:01:02.170
+including the one failed policy write.
