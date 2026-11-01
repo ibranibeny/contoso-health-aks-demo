@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: contoso-health
-  labels:
-    # Pod Security Admission in warn/audit mode only: Azure Policy for AKS is the single
-    # enforcement point for guardrails, so violations surface with the policy name.
-    pod-security.kubernetes.io/warn: restricted
-    pod-security.kubernetes.io/audit: restricted
