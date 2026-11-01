@@ -24,7 +24,7 @@ env:
 jobs:
   capture:
     name: Capture
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Validate the label
         run: |
@@ -48,9 +48,20 @@ jobs:
           CAPTURE_PAYLOAD: ${{ toJSON(github.event.client_payload) }}
         run: |
           cd scripts/guide
-          npm install --no-save --no-audit --no-fund playwright@1 > /dev/null
-          npx playwright install --with-deps chromium > /dev/null
-          node capture.mjs
+          if ! npm install --no-save --no-audit --no-fund playwright@1 > npm.log 2>&1; then
+            echo "::error title=npm install failed::$(tail -c 1500 npm.log | tr '\n' ' ')"; exit 1
+          fi
+          if ! npx playwright install --with-deps chromium > pw.log 2>&1; then
+            echo "::warning title=Using the runner's Google Chrome::$(tail -c 600 pw.log | tr '\n' ' ')"
+            export PW_CHANNEL=chrome
+          fi
+          if ! node capture.mjs > capture.log 2>&1; then
+            cat capture.log
+            echo "::error title=Capture failed::$(tail -c 2000 capture.log | tr '\n' ' ')"; exit 1
+          fi
+          cat capture.log
+          echo "::notice title=Screenshots::$(ls "$OUT_DIR" | grep -c '.png.b64$') captured, $(ls "$OUT_DIR" | grep -c '.error.txt$') failed"
+
       - name: Store on the guide-evidence branch
         run: |
           git config user.name "github-actions[bot]"

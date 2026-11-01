@@ -14,7 +14,8 @@ const allowed = [
 ];
 const safeName = (s) => String(s).replace(/[^a-z0-9-]/gi, '').slice(0, 60) || 'shot';
 
-const browser = await chromium.launch();
+// PW_CHANNEL=chrome uses the runner's preinstalled Google Chrome when the Playwright browser download is unavailable.
+const browser = await chromium.launch(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {});
 const context = await browser.newContext({ viewport: { width: 1024, height: 728 }, deviceScaleFactor: 1, colorScheme: 'light', locale: 'en-US' });
 
 async function shoot(page, name) {
