@@ -1,0 +1,85 @@
+# Continuous integration: runs on every pull request (required status checks) and on main.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [membership-api, bed-api, portal]
+    defaults:
+      run:
+        working-directory: src/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Syntax check
+        run: npm run lint
+      - name: Unit and API tests
+        run: npm test
+
+  image:
+    name: Container build (${{ matrix.service }})
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [membership-api, bed-api, portal]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Build image (not pushed)
+        uses: docker/build-push-action@v7
+        with:
+          context: src/${{ matrix.service }}
+          push: false
+          tags: contoso-health/${{ matrix.service }}:ci-${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  bicep:
+    name: Validate Bicep (IaC)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build and lint
+        run: |
+          az bicep install
+          az bicep version
+          az bicep build --file infra/main.bicep --stdout > /dev/null
+          az bicep build-params --file infra/main.bicepparam --stdout > /dev/null
+          az bicep lint --file infra/main.bicep
+
+  manifests:
+    name: Validate Kubernetes manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Render (kustomize) and validate (kubeconform)
+        run: |
+          mkdir -p rendered
+          kubectl kustomize k8s/base > rendered/app.yaml
+          kubectl kustomize k8s/platform > rendered/platform.yaml
+          cp k8s/demo/*.yaml rendered/
+          docker run --rm -v "$PWD/rendered:/work" ghcr.io/yannh/kubeconform:latest-alpine \
+            -strict -summary -output pretty /work

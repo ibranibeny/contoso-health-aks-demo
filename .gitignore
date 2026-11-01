@@ -1,0 +1,8 @@
+node_modules/
+k8s/release/
+rendered/
+*.log
+.DS_Store
+outputs.json
+whatif.*
+release.yaml

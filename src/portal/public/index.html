@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contoso Health · Coverage &amp; Capacity</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="appbar">
+    <div class="brand">
+      <img src="logo.svg" alt="" width="34" height="34">
+      <div>
+        <div class="brand-name">Contoso Health</div>
+        <div class="brand-sub">Coverage &amp; Capacity Portal</div>
+      </div>
+    </div>
+    <div class="env" id="env"><span class="pill">loading…</span></div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h1>Who has paid this month, and where are beds available right now?</h1>
+      <p>Member contribution status and hospital bed availability by class, served by three microservices on Azure Kubernetes Service. <strong>All data is synthetic.</strong></p>
+      <nav class="tabs" role="tablist" aria-label="Views">
+        <button role="tab" id="tab-contrib" aria-selected="true" aria-controls="view-contrib" data-view="contrib">Contribution status</button>
+        <button role="tab" id="tab-beds" aria-selected="false" aria-controls="view-beds" data-view="beds">Bed availability</button>
+      </nav>
+    </section>
+
+    <section id="view-contrib" role="tabpanel" aria-labelledby="tab-contrib">
+      <div class="kpis" id="kpis"></div>
+      <div class="grid-2">
+        <article class="card"><h2>Payment status by segment</h2><div id="chart-segment" class="chart"></div></article>
+        <article class="card"><h2>Collection rate by inpatient class</h2><div id="chart-class" class="chart"></div></article>
+      </div>
+      <article class="card">
+        <div class="card-head">
+          <h2>Members</h2>
+          <div class="muted" id="asof"></div>
+        </div>
+        <div class="filters">
+          <div class="chips" id="status-chips">
+            <button data-status="" class="chip active">All</button>
+            <button data-status="paid" class="chip">Paid</button>
+            <button data-status="due" class="chip">Due by the 10th</button>
+            <button data-status="notpaid" class="chip">Not paid</button>
+            <button data-status="unpaid" class="chip">In arrears</button>
+          </div>
+          <select id="f-segment" aria-label="Segment"><option value="">All segments</option></select>
+          <select id="f-class" aria-label="Class"><option value="">All classes</option><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option></select>
+          <select id="f-province" aria-label="Province"><option value="">All provinces</option></select>
+          <input id="f-q" type="search" placeholder="Search name, member ID or city" aria-label="Search">
+        </div>
+        <div class="table-wrap">
+          <table id="members">
+            <thead><tr><th>Member ID</th><th>Name</th><th>Segment</th><th>Class</th><th>Location</th><th class="num">Monthly</th><th>Paid through</th><th>Status</th><th class="num">Arrears</th><th class="num">Outstanding</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pager"><button id="prev" class="btn">Previous</button><span id="pageinfo" class="muted"></span><button id="next" class="btn">Next</button></div>
+      </article>
+    </section>
+
+    <section id="view-beds" role="tabpanel" aria-labelledby="tab-beds" hidden>
+      <div class="tiles" id="tiles"></div>
+      <article class="card">
+        <div class="card-head">
+          <h2>Hospitals</h2>
+          <div class="muted" id="beds-asof"></div>
+        </div>
+        <div class="filters">
+          <select id="b-province" aria-label="Province"><option value="">All provinces</option></select>
+          <select id="b-class" aria-label="Bed class"><option value="">All bed classes</option></select>
+          <label class="toggle"><input type="checkbox" id="b-available"> Only with available beds</label>
+          <input id="b-q" type="search" placeholder="Search hospital or city" aria-label="Search hospitals">
+        </div>
+        <div class="legend"><span class="dot ok"></span>available <span class="dot low"></span>under 20% free <span class="dot full"></span>full <span class="dot na"></span>not offered</div>
+        <div class="table-wrap">
+          <table id="hospitals"><thead></thead><tbody></tbody></table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <aside class="drawer" id="drawer" hidden aria-label="Member detail">
+    <button class="close" id="drawer-close" aria-label="Close">×</button>
+    <div id="drawer-body"></div>
+  </aside>
+
+  <footer class="foot" id="foot">Contoso Health demo · synthetic data</footer>
+  <script src="app.js"></script>
+</body>
+</html>

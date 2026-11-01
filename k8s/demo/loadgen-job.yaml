@@ -1,0 +1,36 @@
+# Monitoring demo: 10 minutes of synthetic traffic against the portal.
+# Uses the portal image from your ACR (so it passes the allowed-images policy).
+# Replace <ACR_LOGIN_SERVER> and <TAG> before applying, or let the workflow do it.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: loadgen
+  namespace: contoso-health
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels: { app: loadgen }
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: loadgen
+          image: <ACR_LOGIN_SERVER>/contoso-health/portal:<TAG>
+          command: ["node", "loadgen.js"]
+          env:
+            - { name: TARGET_URL, value: "http://portal" }
+            - { name: DURATION_SECONDS, value: "600" }
+            - { name: CONCURRENCY, value: "6" }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 300m, memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }

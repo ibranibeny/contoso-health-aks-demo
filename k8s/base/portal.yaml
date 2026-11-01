@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal
+  labels: { app: portal, app.kubernetes.io/name: portal, app.kubernetes.io/component: web }
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels: { app: portal }
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
+  template:
+    metadata:
+      labels: { app: portal, app.kubernetes.io/name: portal, app.kubernetes.io/component: web }
+      annotations:
+        # Scraped by Azure Monitor managed Prometheus (see k8s/platform).
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /metrics
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 20
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector: { matchLabels: { app: portal } }
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector: { matchLabels: { app: portal } }
+      containers:
+        - name: portal
+          image: contoso-health/portal:0.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 8080, protocol: TCP }
+          envFrom:
+            - configMapRef: { name: app-config }
+          env:
+            - { name: MEMBERSHIP_API_URL, value: "http://membership-api" }
+            - { name: BED_API_URL, value: "http://bed-api" }
+            - name: NODE_NAME
+              valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+          resources:
+            requests: { cpu: 50m, memory: 96Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal
+  labels: { app: portal }
+  annotations:
+    # Gives the public IP a stable FQDN: <label>.<region>.cloudapp.azure.com (label set per environment).
+    service.beta.kubernetes.io/azure-dns-label-name: contoso-health-demo
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  selector: { app: portal }
+  ports:
+    - { name: http, port: 80, targetPort: http, protocol: TCP }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: portal
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: { app: portal }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: portal
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: portal }
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }

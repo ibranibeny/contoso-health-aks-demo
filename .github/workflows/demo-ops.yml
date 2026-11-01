@@ -1,0 +1,72 @@
+# Demo scenarios you can trigger from the GitHub UI (Actions > Demo scenarios > Run workflow):
+#   traffic      - 10 minutes of synthetic load (fills the dashboards)
+#   fault-on     - make 30% of membership-api requests fail (fires the 5xx alert)
+#   fault-off    - remove the injected fault
+#   policy-check - try to deploy a non-compliant pod (server-side dry run) and show the denial
+name: Demo scenarios
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Scenario to run
+        required: true
+        type: choice
+        options: [traffic, fault-on, fault-off, policy-check]
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-contoso-health-aks' }}
+
+jobs:
+  run:
+    name: ${{ inputs.scenario }}
+    runs-on: ubuntu-latest
+    # Runs from main without an approval gate (OIDC subject = ref:refs/heads/main).
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Connect to the cluster with Microsoft Entra ID
+        run: |
+          AKS_NAME=$(az aks list -g "$AZURE_RESOURCE_GROUP" --query "[0].name" -o tsv)
+          az aks get-credentials -g "$AZURE_RESOURCE_GROUP" -n "$AKS_NAME" --overwrite-existing
+          TOKEN=$(az account get-access-token --resource 6dae42f8-4368-4678-94ff-3960e28e3630 --query accessToken -o tsv)
+          echo "::add-mask::$TOKEN"
+          kubectl config set-credentials github-actions --token="$TOKEN"
+          kubectl config set-context --current --user=github-actions
+      - name: Traffic
+        if: inputs.scenario == 'traffic'
+        run: |
+          IMAGE=$(kubectl -n contoso-health get deploy portal -o jsonpath='{.spec.template.spec.containers[0].image}')
+          kubectl -n contoso-health delete job loadgen --ignore-not-found
+          sed "s#<ACR_LOGIN_SERVER>/contoso-health/portal:<TAG>#${IMAGE}#" k8s/demo/loadgen-job.yaml | kubectl apply -f -
+          echo "Started a 10-minute load test with image \`$IMAGE\`." >> "$GITHUB_STEP_SUMMARY"
+      - name: Fault on
+        if: inputs.scenario == 'fault-on'
+        run: |
+          kubectl -n contoso-health set env deploy/membership-api FAULT_RATE=0.3
+          kubectl -n contoso-health rollout status deploy/membership-api --timeout=180s
+          echo "membership-api now fails 30% of API calls. Expect the **ContosoHealthHigh5xxRate** alert within ~5-10 minutes." >> "$GITHUB_STEP_SUMMARY"
+      - name: Fault off
+        if: inputs.scenario == 'fault-off'
+        run: |
+          kubectl -n contoso-health set env deploy/membership-api FAULT_RATE-
+          kubectl -n contoso-health rollout status deploy/membership-api --timeout=180s
+          echo "Fault removed from membership-api." >> "$GITHUB_STEP_SUMMARY"
+      - name: Policy check
+        if: inputs.scenario == 'policy-check'
+        run: |
+          set +e
+          OUT=$(kubectl apply --dry-run=server -f k8s/demo/policy-violation.yaml 2>&1)
+          RC=$?
+          echo "$OUT"
+          { echo "### Admission result for k8s/demo/policy-violation.yaml"; echo '```'; echo "$OUT"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ $RC -eq 0 ]; then echo "::error::The non-compliant pod was NOT blocked. Check the Azure Policy assignments (they can take ~20 minutes to sync)."; exit 1; fi
+          echo "::notice::Blocked by Azure Policy as expected."

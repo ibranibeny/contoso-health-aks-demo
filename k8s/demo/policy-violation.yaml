@@ -1,0 +1,17 @@
+# Governance demo: this pod breaks two Azure Policy guardrails on purpose.
+#  1. The image does not come from the approved Azure Container Registry.
+#  2. It asks for a privileged container.
+# Apply it from the portal (AKS > Kubernetes resources > Workloads > Create > Apply a YAML)
+# and Azure Policy (Gatekeeper) rejects it at admission time.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: policy-test
+  namespace: contoso-health
+  labels: { app: policy-test }
+spec:
+  containers:
+    - name: nginx
+      image: docker.io/library/nginx:1.27
+      securityContext:
+        privileged: true
