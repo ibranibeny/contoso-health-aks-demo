@@ -50,11 +50,7 @@
         value: &#x27;^${replace(acrLoginServer, &#x27;.&#x27;, &#x27;\\.&#x27;)}/.+$&#x27;
       }
     }
-    nonComplianceMessages: [
-      {
-        message: &#x27;Contoso Health guardrail: use an image from ${acrLoginServer}.&#x27;
-      }
-    ]
+    // No nonComplianceMessages: not supported for &#x27;Microsoft.Kubernetes.Data&#x27; mode definitions.
   }
 }</code></pre></div>
 <h2 id="network">Network policy<a class="anchor" href="#network" aria-label="Link to this section">#</a></h2>
