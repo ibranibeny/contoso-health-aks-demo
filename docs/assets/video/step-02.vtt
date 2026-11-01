@@ -1,0 +1,88 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.468
+Step two.
+
+00:00:00.518 --> 00:00:04.782
+Before we deploy anything, we make sure the subscription is ready: resource
+
+00:00:04.832 --> 00:00:08.579
+providers, v CPU quota, and a resource group in Indonesia Central.
+
+00:00:08.629 --> 00:00:10.713
+In the Azure portal, open Subscriptions,
+
+00:00:10.763 --> 00:00:13.542
+and select the subscription you'll use for this demo.
+
+00:00:13.592 --> 00:00:17.832
+In the subscription menu, search for resource providers, and open that page.
+
+00:00:17.882 --> 00:00:18.847
+Filter by name.
+
+00:00:18.897 --> 00:00:23.719
+Microsoft dot Container Service, the AKS provider, must show Registered.
+
+00:00:23.769 --> 00:00:28.413
+Microsoft dot Monitor powers the Azure Monitor workspace for managed Prometheus.
+
+00:00:28.463 --> 00:00:29.586
+It's registered too.
+
+00:00:29.636 --> 00:00:33.312
+Microsoft dot Policy Insights is used by the Azure Policy add-on.
+
+00:00:33.362 --> 00:00:37.094
+If a provider shows Not Registered, select it and choose Register.
+
+00:00:37.144 --> 00:00:37.838
+Next, quota.
+
+00:00:37.888 --> 00:00:40.318
+Open Quotas, then My quotas for Compute,
+
+00:00:40.368 --> 00:00:43.231
+and set the region filter to Indonesia Central.
+
+00:00:43.281 --> 00:00:44.894
+Search for DDS version 5.
+
+00:00:44.944 --> 00:00:50.480
+The cluster needs eight v CP Us for two nodes, and sixteen if it scales out to four.
+
+00:00:52.530 --> 00:00:55.342
+Now open Resource groups, and select Create.
+
+00:00:55.392 --> 00:00:59.214
+Keep your subscription, name the group RG contoso health AKS,
+
+00:00:59.264 --> 00:01:00.801
+and open the region list.
+
+00:01:00.851 --> 00:01:04.645
+Choose Indonesia Central, so data and compute stay in Indonesia.
+
+00:01:04.695 --> 00:01:05.700
+Open the Tags tab.
+
+00:01:05.750 --> 00:01:09.161
+Tags drive cost reporting, and they make ownership obvious.
+
+00:01:09.211 --> 00:01:13.053
+Add three tags: workload, environment, and cost center.
+
+00:01:13.103 --> 00:01:15.176
+Then select Review and create.
+
+00:01:15.226 --> 00:01:17.357
+Check the summary, and select Create.
+
+00:01:17.407 --> 00:01:17.639
+Done.
+
+00:01:17.689 --> 00:01:20.912
+Everything for this demo lands in this one resource group,
+
+00:01:20.962 --> 00:01:23.000
+so clean-up later is a single delete.

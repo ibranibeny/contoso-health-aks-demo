@@ -1,0 +1,64 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.779
+Langkah enam.
+
+00:00:00.829 --> 00:00:04.797
+Begitu infrastruktur siap, workflow aplikasi otomatis berjalan.
+
+00:00:04.847 --> 00:00:08.390
+Workflow ini melakukan build tiga image dan push ke registry privat.
+
+00:00:08.440 --> 00:00:11.348
+Lalu rollout menunggu persetujuan di gerbang production.
+
+00:00:12.398 --> 00:00:16.324
+Setelah disetujui, job melakukan rollout rilis, menunggu setiap deployment,
+
+00:00:16.374 --> 00:00:18.816
+lalu menjalankan smoke test ke endpoint publik.
+
+00:00:18.866 --> 00:00:21.959
+Environment production kini mengarah ke URL live.
+
+00:00:22.009 --> 00:00:25.477
+Di dalam cluster: tiga deployment, masing-masing dua replika,
+
+00:00:25.527 --> 00:00:27.784
+dengan autoscaler dan disruption budget.
+
+00:00:27.834 --> 00:00:31.092
+Hanya portal yang diekspos lewat load balancer.
+
+00:00:31.142 --> 00:00:32.852
+Kedua API tetap internal.
+
+00:00:32.902 --> 00:00:36.802
+Kedua node berjalan di availability zone yang berbeda di Indonesia Central.
+
+00:00:36.852 --> 00:00:39.710
+Dan inilah Contoso Health: tiga ratus enam puluh peserta,
+
+00:00:39.760 --> 00:00:43.790
+siapa yang sudah membayar, yang jatuh tempo tanggal sepuluh, dan yang menunggak.
+
+00:00:43.840 --> 00:00:47.258
+Filter Not paid untuk melihat peserta yang menunggak dan tunggakannya.
+
+00:00:47.308 --> 00:00:51.800
+Buka seorang peserta untuk melihat detail: iuran, pembayar, bulan tunggakan,
+
+00:00:51.850 --> 00:00:53.653
+dan riwayat pembayaran setahun.
+
+00:00:53.703 --> 00:00:57.532
+Tab kedua berisi tempat tidur kosong per kelas, di dua puluh dua rumah sakit.
+
+00:00:57.582 --> 00:01:00.965
+Begitu pula per rumah sakit, diperbarui tiap beberapa menit.
+
+00:01:01.015 --> 00:01:06.097
+Endpoint info menampilkan versi, yaitu commit-nya, ditambah region, cluster,
+
+00:01:06.147 --> 00:01:07.650
+dan pod yang merespons.

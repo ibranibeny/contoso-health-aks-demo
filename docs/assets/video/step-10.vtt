@@ -1,0 +1,31 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.474
+Step ten.
+
+00:00:00.524 --> 00:00:05.011
+Clean-up is short, because the demo keeps its resources in one resource group.
+
+00:00:05.061 --> 00:00:07.488
+While the demo runs, the nodes, the load balancer,
+
+00:00:07.538 --> 00:00:09.915
+the registry and monitoring ingestion are billed.
+
+00:00:09.965 --> 00:00:12.837
+Stop the cluster between sessions to save the compute cost.
+
+00:00:12.887 --> 00:00:15.477
+When you are done, delete the resource group in the portal,
+
+00:00:15.527 --> 00:00:17.044
+or with one command in Cloud Shell.
+
+00:00:17.094 --> 00:00:20.713
+Then check for the managed resource group that Azure created for the Azure Monitor
+
+00:00:20.763 --> 00:00:21.160
+workspace.
+
+00:00:21.210 --> 00:00:24.740
+We did not run the clean-up here, because the demo stays up for the walkthrough.

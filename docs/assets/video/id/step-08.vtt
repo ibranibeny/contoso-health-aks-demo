@@ -1,0 +1,46 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.894
+Langkah delapan.
+
+00:00:00.944 --> 00:00:03.312
+Monitoring sudah diaktifkan oleh templat.
+
+00:00:03.362 --> 00:00:07.382
+Sekarang kita sengaja merusak sesuatu, dan melihat masalahnya muncul.
+
+00:00:07.432 --> 00:00:11.237
+Dua agent berjalan di cluster: AMA metrics mengambil metrik Prometheus,
+
+00:00:11.287 --> 00:00:13.409
+dan AMA logs mengumpulkan log container.
+
+00:00:13.459 --> 00:00:17.782
+Aturan alert juga berupa kode: sebuah rule group Prometheus di modul monitoring.
+
+00:00:17.832 --> 00:00:19.941
+Workflow Demo scenarios memulai uji beban,
+
+00:00:19.991 --> 00:00:23.950
+lalu menyuntikkan gangguan: tiga puluh persen panggilan ke membership API kini
+
+00:00:24.000 --> 00:00:24.258
+gagal.
+
+00:00:24.308 --> 00:00:28.281
+Di Log Analytics, request per layanan dan status menunjukkan error lima nol tiga
+
+00:00:28.331 --> 00:00:29.438
+dari gangguan tersebut.
+
+00:00:30.488 --> 00:00:35.376
+Error per lima menit melonjak tepat setelah gangguan, pukul 19.34 UTC.
+
+00:00:35.426 --> 00:00:38.425
+Tujuh menit kemudian, alert high five x x rate terpicu,
+
+00:00:38.475 --> 00:00:40.809
+sekali untuk setiap layanan yang terdampak.
+
+00:00:41.859 --> 00:00:46.490
+Dan pemakaian resource tetap kecil dengan beban ini: beberapa millicore per pod.

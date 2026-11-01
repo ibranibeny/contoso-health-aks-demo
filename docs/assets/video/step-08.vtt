@@ -1,0 +1,43 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.560
+Step eight.
+
+00:00:00.610 --> 00:00:02.942
+Monitoring was switched on by the template.
+
+00:00:02.992 --> 00:00:06.101
+Now we break something, on purpose, and watch it surface.
+
+00:00:06.151 --> 00:00:10.586
+Two agents run in the cluster: AMA metrics scrapes Prometheus metrics,
+
+00:00:10.636 --> 00:00:12.957
+and AMA logs collects container logs.
+
+00:00:13.007 --> 00:00:17.164
+The alert rules are code too: a Prometheus rule group in the monitoring module.
+
+00:00:17.214 --> 00:00:19.925
+The demo scenarios workflow starts a load test,
+
+00:00:19.975 --> 00:00:24.271
+and then injects a fault: thirty percent of membership API calls now fail.
+
+00:00:24.321 --> 00:00:28.382
+In Log Analytics, the requests by service and status show the five-oh-threes from
+
+00:00:28.432 --> 00:00:28.889
+the fault.
+
+00:00:29.939 --> 00:00:34.434
+Errors per five minutes jump right after the fault, at nineteen thirty four UTC.
+
+00:00:34.484 --> 00:00:37.983
+Seven minutes later, the high five x x rate alert fired,
+
+00:00:38.033 --> 00:00:39.947
+once for each affected service.
+
+00:00:40.997 --> 00:00:44.980
+And resource use stays small under this load: a few millicores per pod.

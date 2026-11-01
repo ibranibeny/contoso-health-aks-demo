@@ -1,0 +1,82 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.665
+Langkah lima.
+
+00:00:00.715 --> 00:00:04.737
+Seluruh platform berasal dari satu templat Bicep, di-deploy oleh workflow,
+
+00:00:04.787 --> 00:00:06.223
+dengan gerbang persetujuan.
+
+00:00:06.273 --> 00:00:10.930
+Workflow Infrastructure berjalan saat ada perubahan di infra, sesuai permintaan,
+
+00:00:10.980 --> 00:00:11.754
+atau dari API.
+
+00:00:11.804 --> 00:00:14.193
+Job deploy-nya menargetkan environment production,
+
+00:00:14.243 --> 00:00:17.510
+jadi job ini menunggu persetujuan sebelum bisa mendapat token Azure.
+
+00:00:17.560 --> 00:00:23.171
+Main dot bicep merangkai lima modul: monitoring, registry, cluster, observability,
+
+00:00:23.221 --> 00:00:24.137
+dan guardrail.
+
+00:00:24.187 --> 00:00:28.522
+Resource cluster mengatur Entra ID dengan Azure RBAC, akun lokal nonaktif,
+
+00:00:28.572 --> 00:00:32.492
+Azure CNI Overlay dengan Cilium, availability zone, dan autoscaler.
+
+00:00:32.542 --> 00:00:35.455
+Setelah disetujui, job masuk dengan OpenID Connect,
+
+00:00:35.505 --> 00:00:38.011
+lalu menjalankan az deployment group create.
+
+00:00:38.061 --> 00:00:38.948
+Run pertama gagal.
+
+00:00:38.998 --> 00:00:42.802
+Persetujuannya tercatat, dan operasi yang gagal dilaporkan langsung di run
+
+00:00:42.852 --> 00:00:46.499
+tersebut: sebuah policy Kubernetes menolak pesan non-compliance kustom.
+
+00:00:47.549 --> 00:00:49.538
+Perbaikannya di policy dot bicep.
+
+00:00:49.588 --> 00:00:52.690
+Assignment mode Kubernetes tak diberi pesan kustom.
+
+00:00:52.740 --> 00:00:54.915
+Gatekeeper memberi pesannya sendiri.
+
+00:00:54.965 --> 00:00:56.157
+Run kedua berhasil.
+
+00:00:56.207 --> 00:01:00.016
+Ringkasannya menampilkan persetujuan dan output deployment.
+
+00:01:00.066 --> 00:01:03.673
+Di resource group, riwayat deployment menunjukkan hal yang sama: infra empat
+
+00:01:03.723 --> 00:01:07.522
+berhenti di satu assignment, dan infra lima menyelesaikannya secara inkremental.
+
+00:01:07.572 --> 00:01:11.157
+Inilah yang ada sekarang: cluster, registry, Log Analytics,
+
+00:01:11.207 --> 00:01:14.977
+Azure Monitor workspace, data collection rule, dan rule group.
+
+00:01:15.027 --> 00:01:20.415
+Dan cluster-nya, dibaca kembali dari Azure: Kubernetes 1.36, Azure RBAC,
+
+00:01:20.465 --> 00:01:24.040
+akun lokal dinonaktifkan, Cilium, dan tiga zona.

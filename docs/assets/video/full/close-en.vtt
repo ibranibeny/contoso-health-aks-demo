@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.038
+That is the full demo.
+
+00:00:01.088 --> 00:00:04.894
+The platform is defined in code, every change goes through a pull request with
+
+00:00:04.944 --> 00:00:07.959
+checks, and every production deployment waits for an approval.
+
+00:00:08.009 --> 00:00:11.716
+Azure Monitor watches the cluster, and Azure Policy enforces the guardrails.
+
+00:00:11.766 --> 00:00:15.621
+The guide, the code and the workflows are in one GitHub repository that you can
+
+00:00:15.671 --> 00:00:16.610
+reuse as a template.

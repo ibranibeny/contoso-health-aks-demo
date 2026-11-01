@@ -1,0 +1,76 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.486
+Step five.
+
+00:00:00.536 --> 00:00:04.398
+The whole platform comes from one Bicep template, deployed by a workflow,
+
+00:00:04.448 --> 00:00:05.416
+behind an approval.
+
+00:00:05.466 --> 00:00:10.570
+The Infrastructure workflow runs on changes under infra, on demand, or from the API.
+
+00:00:10.620 --> 00:00:12.926
+Its deploy job targets the production environment,
+
+00:00:12.976 --> 00:00:15.661
+so it waits for approval before it can get an Azure token.
+
+00:00:15.711 --> 00:00:20.310
+Main dot bicep wires five modules: monitoring, the registry, the cluster,
+
+00:00:20.360 --> 00:00:22.221
+observability, and guardrails.
+
+00:00:22.271 --> 00:00:26.862
+The cluster resource sets Entra ID with Azure RBAC, local accounts off,
+
+00:00:26.912 --> 00:00:31.437
+Azure CNI Overlay with Cilium, availability zones, and the autoscaler.
+
+00:00:31.487 --> 00:00:34.683
+After approval, the job signs in with OpenID Connect,
+
+00:00:34.733 --> 00:00:36.888
+and runs az deployment group create.
+
+00:00:36.938 --> 00:00:38.022
+The first run failed.
+
+00:00:38.072 --> 00:00:42.453
+The approval is on record, and the failing operation is reported right on the run:
+
+00:00:42.503 --> 00:00:45.749
+a Kubernetes policy rejected a custom non-compliance message.
+
+00:00:46.799 --> 00:00:48.629
+The fix is in policy dot bicep.
+
+00:00:48.679 --> 00:00:53.360
+Kubernetes-mode assignments get no custom message; Gatekeeper returns its own.
+
+00:00:53.410 --> 00:00:54.696
+The second run succeeded.
+
+00:00:54.746 --> 00:00:57.849
+The summary shows the approval, and the deployment outputs.
+
+00:00:57.899 --> 00:01:01.789
+In the resource group, the deployment history tells the same story: infra four
+
+00:01:01.839 --> 00:01:05.477
+stopped at one assignment, and infra five finished the job incrementally.
+
+00:01:05.527 --> 00:01:09.280
+This is what exists now: the cluster, the registry, Log Analytics,
+
+00:01:09.330 --> 00:01:13.197
+the Azure Monitor workspace, data collection rules, and rule groups.
+
+00:01:13.247 --> 00:01:18.172
+And the cluster, read back from Azure: Kubernetes 1.36, Azure RBAC,
+
+00:01:18.222 --> 00:01:21.810
+local accounts disabled, Cilium, and three zones.

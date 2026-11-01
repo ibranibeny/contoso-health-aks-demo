@@ -1,0 +1,55 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.426
+Step four. We connect the repository to Azure,
+
+00:00:02.476 --> 00:00:05.334
+and we put guardrails on how changes reach production.
+
+00:00:05.384 --> 00:00:08.995
+In Microsoft Entra ID, find your own user, and copy the object ID.
+
+00:00:09.045 --> 00:00:13.156
+The template uses it to give you access to the cluster views in the portal.
+
+00:00:13.206 --> 00:00:14.396
+Copy the Object ID.
+
+00:00:14.446 --> 00:00:17.138
+It becomes the admin principal ID setting.
+
+00:00:17.188 --> 00:00:20.741
+In the repository settings, create an environment called production.
+
+00:00:20.791 --> 00:00:23.095
+Tick Required reviewers, and add yourself.
+
+00:00:23.145 --> 00:00:26.456
+Deploy jobs that target production now wait for an approval.
+
+00:00:26.506 --> 00:00:29.588
+Here is what this repository ended up with: the production gate,
+
+00:00:29.638 --> 00:00:33.551
+five encrypted secrets with the Azure identifiers, and an active ruleset on main.
+
+00:00:34.601 --> 00:00:36.321
+The same settings exist as code.
+
+00:00:36.371 --> 00:00:39.585
+This Terraform file declares the environment, its reviewer,
+
+00:00:39.635 --> 00:00:41.356
+and the main-only branch policy.
+
+00:00:41.406 --> 00:00:46.103
+And the ruleset: pull requests, eleven required status checks, no force pushes,
+
+00:00:46.153 --> 00:00:47.064
+and no deletion.
+
+00:00:47.114 --> 00:00:50.153
+The workflows read the identifiers from variables or secrets,
+
+00:00:50.203 --> 00:00:53.850
+and a first job checks that Azure is connected before anything else runs.

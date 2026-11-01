@@ -1,0 +1,58 @@
+{
+ "languages": {
+  "en": {
+   "label": "English",
+   "audio_lang": "eng",
+   "clips": [
+    {
+     "src": "full/open-en.mp4",
+     "title": "Opening"
+    },
+    {
+     "src": "step-01.mp4",
+     "title": "Step 1: Get the code and take a tour"
+    },
+    {
+     "src": "step-02.mp4",
+     "title": "Step 2: Prepare the Azure subscription"
+    },
+    {
+     "src": "step-03.mp4",
+     "title": "Step 3: Create the deployment identity"
+    },
+    {
+     "src": "step-04.mp4",
+     "title": "Step 4: Connect GitHub to Azure"
+    },
+    {
+     "src": "step-05.mp4",
+     "title": "Step 5: Provision the platform with Bicep"
+    },
+    {
+     "src": "step-06.mp4",
+     "title": "Step 6: Build and deploy the app"
+    },
+    {
+     "src": "step-07.mp4",
+     "title": "Step 7: Ship a change with code review"
+    },
+    {
+     "src": "step-08.mp4",
+     "title": "Step 8: Monitor the cluster and the app"
+    },
+    {
+     "src": "step-09.mp4",
+     "title": "Step 9: Prove the governance guardrails"
+    },
+    {
+     "src": "step-10.mp4",
+     "title": "Step 10: Clean up"
+    },
+    {
+     "src": "full/close-en.mp4",
+     "title": "Summary"
+    }
+   ]
+  }
+ }
+}

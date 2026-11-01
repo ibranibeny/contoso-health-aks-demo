@@ -1,0 +1,55 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.554
+Step seven.
+
+00:00:00.604 --> 00:00:04.891
+A change goes to production the way a team would ship it: branch, pull request,
+
+00:00:04.941 --> 00:00:06.648
+checks, review, merge, approval.
+
+00:00:06.698 --> 00:00:09.389
+Pull request four changes one paragraph of the portal.
+
+00:00:09.439 --> 00:00:13.196
+The template asks what changed, how it was tested, and how to roll it back.
+
+00:00:13.246 --> 00:00:16.922
+The files changed tab shows the exact diff the reviewer approves.
+
+00:00:16.972 --> 00:00:20.151
+It merged only after the checks passed: twelve checks,
+
+00:00:20.201 --> 00:00:22.662
+including the eleven the ruleset requires.
+
+00:00:22.712 --> 00:00:24.522
+The merge started the app workflow.
+
+00:00:24.572 --> 00:00:26.807
+After approval, the new version rolled out.
+
+00:00:26.857 --> 00:00:29.183
+And it is live: the new sentence is there,
+
+00:00:29.233 --> 00:00:31.786
+and the version badge shows the merged commit.
+
+00:00:32.836 --> 00:00:37.049
+Pull request five changes infrastructure: the autoscaler maximum goes from four to
+
+00:00:37.099 --> 00:00:37.309
+five.
+
+00:00:37.359 --> 00:00:40.116
+The what-if job runs with the pull-request credential.
+
+00:00:40.166 --> 00:00:42.235
+Its comment lists what would change.
+
+00:00:42.285 --> 00:00:44.472
+The cluster shows Modify, as expected.
+
+00:00:44.522 --> 00:00:48.710
+Some other rows are what-if noise, so read the details before you merge.
