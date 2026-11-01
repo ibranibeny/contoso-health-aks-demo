@@ -1,0 +1,3 @@
+TimeoutError: page.goto: Timeout 90000ms exceeded.
+Call log:
+  - navigating to "https://github.com/ibranibeny/contoso-health-aks-demo/pull/5", waiting until "networkidle"
