@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step 6: Build and deploy the app · Contoso Health on AKS</title>
+<meta name="description" content="Approve the app rollout, open Contoso Health and see the workloads in the Azure portal.">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="preload" href="../assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html"><img src="../assets/logo.svg" alt=""><span>Contoso Health</span><span class="sub">on AKS</span></a>
+  <nav class="topnav" aria-label="Main">
+    <a href="../guide/step-01.html" class="on">Guide</a>
+    <a href="../architecture.html" class="">Architecture</a>
+    <a href="../outcomes/iac.html" class="">Outcomes</a>
+    <a href="../reference/workflows.html" class="">Reference</a>
+    <a class="gh" href="https://github.com/ibranibeny/contoso-health-aks-demo"><svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span>Repository</span></a>
+  </nav>
+  <button class="menu-btn" type="button" aria-label="Menu">Menu</button>
+</header>
+<div class="shell">
+<nav class="sidebar" aria-label="Guide"><h4>Start here</h4><ul><li><a href="../index.html" class=""><span class="n">00</span>Overview</a></li><li><a href="../architecture.html" class=""><span class="n">&#8226;</span>Architecture &amp; app</a></li></ul><h4>Guide</h4><ol><li><a href="../guide/step-01.html" class=""><span class="n">01</span>Get the code</a></li><li><a href="../guide/step-02.html" class=""><span class="n">02</span>Prepare the subscription</a></li><li><a href="../guide/step-03.html" class=""><span class="n">03</span>Create the deployment identity</a></li><li><a href="../guide/step-04.html" class=""><span class="n">04</span>Connect GitHub to Azure</a></li><li><a href="../guide/step-05.html" class=""><span class="n">05</span>Provision with Bicep</a></li><li><a href="../guide/step-06.html" class="on"><span class="n">06</span>Build and deploy the app</a></li><li><a href="../guide/step-07.html" class=""><span class="n">07</span>Ship a change with code review</a></li><li><a href="../guide/step-08.html" class=""><span class="n">08</span>Monitor the platform</a></li><li><a href="../guide/step-09.html" class=""><span class="n">09</span>Prove the guardrails</a></li><li><a href="../guide/step-10.html" class=""><span class="n">10</span>Clean up</a></li></ol><h4>Outcomes</h4><ul><li><a href="../outcomes/iac.html" class=""><span class="n">&#8226;</span>Infrastructure as code</a></li><li><a href="../outcomes/monitoring.html" class=""><span class="n">&#8226;</span>Monitoring</a></li><li><a href="../outcomes/governance.html" class=""><span class="n">&#8226;</span>Governance</a></li></ul><h4>Reference</h4><ul><li><a href="../reference/workflows.html" class=""><span class="n">&#8226;</span>Workflows and identity</a></li><li><a href="../reference/app.html" class=""><span class="n">&#8226;</span>App and APIs</a></li></ul></nav>
+<main id="main"><div class="content">
+<p class="eyebrow">Step 6 of 10</p><h1>Build and deploy the app</h1><p class="lead">When the infrastructure deployment succeeds, the App workflow starts on its own: it builds three images, pushes them to the private registry, waits for your approval, rolls them out to AKS and smoke-tests the public endpoint.</p>
+<div class="meta"><span class="chip"><b>10 min</b></span><span class="chip">GitHub</span><span class="chip">Azure portal</span><span class="chip">Browser</span><span class="chip accent">CI/CD</span><span class="chip accent">Security</span></div>
+<h2 id="goals">What you will do<a class="anchor" href="#goals" aria-label="Link to this section">#</a></h2><ul><li>Watch the <em>App (build &amp; deploy to AKS)</em> workflow build and push the images.</li><li>Approve the rollout to <code>production</code>.</li><li>Open Contoso Health and see the workloads in the Azure portal.</li></ul>
+<h2 id="build">Build and push the images<a class="anchor" href="#build" aria-label="Link to this section">#</a></h2>
+
+<ol class="walk"><li><p class="say">In <span class="ui">Actions</span>, a run of <span class="ui">App (build & deploy to AKS)</span> started automatically after the infrastructure run.</p></li><li><p class="say">The <em>Build &amp; push images</em> job needs no approval: it signs in with the <code>main</code> branch credential, logs in to the registry with Entra ID and pushes <code>membership-api</code>, <code>bed-api</code> and <code>portal</code>, each tagged with the commit SHA.</p></li></ol>
+
+<h2 id="rollout">Approve the rollout<a class="anchor" href="#rollout" aria-label="Link to this section">#</a></h2>
+
+<ol class="walk"><li><p class="say">The <em>Deploy to AKS</em> job waits for <code>production</code>. Select <span class="ui">Review deployments</span>, tick <code>production</code>, <span class="ui">Approve and deploy</span>.</p></li><li><p class="say">The job gets cluster credentials with an Entra ID token (local accounts are disabled), renders the release with Kustomize, applies it, waits for each rollout and calls the public endpoint.</p></li><li><p class="say">The run summary shows the URL and version. The <span class="ui">production</span> environment link opens the app.</p></li></ol>
+
+<h2 id="app">Open Contoso Health<a class="anchor" href="#app" aria-label="Link to this section">#</a></h2>
+
+<ol class="walk"><li><p class="say">Open <code>http://contoso-health-&lt;owner&gt;.indonesiacentral.cloudapp.azure.com</code>.</p></li><li><p class="say"><span class="ui">Contribution status</span>: members, paid, due by the 10th, not paid, collection rate, outstanding arrears; payment status by segment and class; a searchable member table.</p></li><li><p class="say"><span class="ui">Bed availability</span>: available beds per class across 22 hospitals, and per hospital.</p></li></ol>
+
+<h2 id="workloads">See the workloads in the portal<a class="anchor" href="#workloads" aria-label="Link to this section">#</a></h2>
+
+<ol class="walk"><li><p class="say">Open the cluster <code>aks-contoso-health</code>, then <span class="ui">Kubernetes resources</span>, <span class="ui">Workloads</span>. Filter the namespace <code>contoso-health</code>: three Deployments, two replicas each.</p></li><li><p class="say"><span class="ui">Services and ingresses</span>: <code>portal</code> is the only <strong>LoadBalancer</strong> service; the APIs are internal (ClusterIP).</p></li></ol>
+
+<h2 id="verify">Check your work<a class="anchor" href="#verify" aria-label="Link to this section">#</a></h2><ul class="checks"><li>The App workflow run is green; its summary shows the URL and the image tag.</li><li>The app loads and the header shows the cluster, region and version.</li><li>In the portal, the three Deployments in <code>contoso-health</code> are all Ready.</li></ul>
+<h2 id="why">How it works<a class="anchor" href="#why" aria-label="Link to this section">#</a></h2><p><strong>Immutable releases.</strong> Images are tagged with the commit SHA, never <code>latest</code>. The release manifest is rendered per run, so what runs in the cluster maps to exactly one commit, and a rollback is a revert of that commit.</p><p><strong>No kubeconfig secrets.</strong> The cluster has local accounts disabled. The job asks Entra ID for a token for the AKS server application and uses it as the kubectl credential; Azure RBAC (AKS RBAC Cluster Admin, granted by Bicep) authorizes it.</p><p><strong>Hardened workloads.</strong> Every pod runs as non-root with a read-only root file system, drops all Linux capabilities and uses the RuntimeDefault seccomp profile. HorizontalPodAutoscalers scale on CPU, PodDisruptionBudgets keep one replica during node drains, and NetworkPolicies deny all ingress except portal to APIs and the metrics agent.</p>
+<h2 id="trouble">Troubleshooting<a class="anchor" href="#trouble" aria-label="Link to this section">#</a></h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Build job ends with <em>Registry or cluster not ready</em></td><td>The infrastructure run has not finished or failed. Fix it, then re-run the App workflow.</td></tr><tr><td><code>Forbidden</code> from kubectl</td><td>The identity lacks AKS RBAC Cluster Admin: check <code>AZURE_PRINCIPAL_ID</code> and re-run the infrastructure workflow.</td></tr><tr><td>Pods <code>ErrImagePull</code></td><td>The kubelet identity lacks AcrPull on the registry, or the image tag does not exist. Check the role assignment created by Bicep.</td></tr><tr><td>Smoke test times out</td><td>The public IP is still provisioning. Re-run the failed job; the DNS name can take a minute to resolve.</td></tr></tbody></table></div>
+<h2 id="learn">Learn more<a class="anchor" href="#learn" aria-label="Link to this section">#</a></h2><ul><li><a href="https://learn.microsoft.com/en-us/azure/aks/kubernetes-action">Build, test and deploy containers to AKS using GitHub Actions</a></li><li><a href="https://learn.microsoft.com/en-us/azure/aks/kubernetes-portal">Access Kubernetes resources from the Azure portal</a></li><li><a href="https://learn.microsoft.com/en-us/azure/aks/use-network-policies">Secure pod traffic with network policies</a></li><li><a href="https://learn.microsoft.com/en-us/azure/container-registry/container-registry-rbac-built-in-roles-overview">Azure Container Registry Entra permissions and role assignments</a></li></ul>
+<nav class="pager" aria-label="Pagination"><a href="step-05.html"><span class="dir">&larr; Previous</span>05 · Provision with Bicep</a><a class="nx" href="step-07.html"><span class="dir">Next &rarr;</span>07 · Ship a change with code review</a></nav>
+</div></main>
+<aside class="toc" aria-label="On this page"><h5>On this page</h5><a href="#goals">What you will do</a><a href="#build">Build and push the images</a><a href="#rollout">Approve the rollout</a><a href="#app">Open Contoso Health</a><a href="#workloads">See the workloads in the portal</a><a href="#verify">Check your work</a><a href="#why">How it works</a><a href="#trouble">Troubleshooting</a><a href="#learn">Learn more</a></aside>
+</div>
+<footer class="site">Contoso Health is a fictional company. All member and hospital data is synthetic. Built for an Azure Kubernetes Service demo in <code>indonesiacentral</code> · <a href="https://github.com/ibranibeny/contoso-health-aks-demo">Source on GitHub</a></footer>
+<script src="../assets/js/site.js" defer></script>
+</body>
+</html>
