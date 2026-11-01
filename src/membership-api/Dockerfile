@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Zero-dependency Node.js service: nothing to npm install, tiny attack surface.
-FROM node:24-alpine
+FROM node:26-alpine
 ENV NODE_ENV=production PORT=8080 SERVICE_NAME=membership-api
 WORKDIR /app
 COPY --chown=node:node package.json server.js ./
