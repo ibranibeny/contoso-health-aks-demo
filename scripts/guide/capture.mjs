@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 
 const payload = JSON.parse(process.env.CAPTURE_PAYLOAD || '{}');
 const out = process.env.OUT_DIR;
+fs.mkdirSync(out, { recursive: true });
 const allowed = [
   /^https:\/\/ibranibeny\.github\.io\/contoso-health-aks-demo\//,
   /^https:\/\/github\.com\/ibranibeny\/contoso-health-aks-demo(\/|$)/,

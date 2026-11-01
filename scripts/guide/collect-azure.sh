@@ -4,6 +4,7 @@
 set +e
 RG="${AZURE_RESOURCE_GROUP:-rg-contoso-health-aks}"
 O="$OUT_DIR"
+mkdir -p "$O"
 az config set extension.use_dynamic_install=yes_without_prompt core.only_show_errors=true >/dev/null 2>&1
 
 az group show -n "$RG" --query "{name:name, location:location, tags:tags}" -o json > "$O/rg.json"

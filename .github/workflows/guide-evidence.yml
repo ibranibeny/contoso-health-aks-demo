@@ -29,7 +29,6 @@ jobs:
       - name: Validate the label
         run: |
           if ! [[ "$LABEL" =~ ^[a-z0-9-]{1,40}$ ]]; then echo "::error::Label must match [a-z0-9-]{1,40}"; exit 1; fi
-          mkdir -p "$OUT_DIR"
       - uses: actions/checkout@v7
       - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         if: github.event.client_payload.azure == true
@@ -73,6 +72,7 @@ jobs:
             git -C ../ev checkout -q --orphan guide-evidence
             git -C ../ev rm -rfq .
           fi
+          mkdir -p "$OUT_DIR"
           rm -rf "../ev/runs/$LABEL" && mkdir -p "../ev/runs/$LABEL"
           cp -r "$OUT_DIR"/. "../ev/runs/$LABEL/"
           echo "{\"run\": \"${GITHUB_RUN_ID}\", \"sha\": \"${GITHUB_SHA}\", \"time\": \"$(date -u +%FT%TZ)\"}" > "../ev/runs/$LABEL/_meta.json"
