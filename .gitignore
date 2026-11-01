@@ -6,3 +6,9 @@ rendered/
 outputs.json
 whatif.*
 release.yaml
+# Terraform (github/)
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+crash.log

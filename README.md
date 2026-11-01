@@ -20,11 +20,11 @@ All three services are zero-dependency Node.js 24 containers (no `npm install`, 
 
 | Area | How it is done here |
 |---|---|
-| **IaC** | Bicep in `infra/` (AKS, ACR, Log Analytics, Azure Monitor workspace, data collection rules, alert rules, policy assignments). Pull requests show a **what-if** preview as a comment; merges to `main` deploy after an environment approval. |
+| **IaC** | Three layers, all in this repository. **Bootstrap** (Bicep, subscription scope, `infra/bootstrap`): resource group, deployment identity, federated credentials, least-privilege role assignments. **GitHub settings** (Terraform, `github/`): production environment, repository variables, branch ruleset. **Platform** (Bicep, `infra/`): AKS, ACR, Log Analytics, Azure Monitor workspace, data collection rules, alert rules, policy assignments; pull requests show a **what-if** comment, merges deploy after an environment approval. Workloads are declarative too (Kustomize in `k8s/`). |
 | **CI/CD** | GitHub Actions: tests, container builds, Bicep lint, kubeconform, CodeQL on every PR; images pushed to ACR and rolled out to AKS on merge. Azure login uses **OpenID Connect** — no secrets in GitHub. |
-| **Code review** | `main` is protected by a ruleset: pull request required, code-owner review, required status checks, linear history. |
+| **Code review** | `main` is protected by a ruleset: pull request required, conversations resolved, required status checks, no force pushes or deletion. Optional automatic Copilot code review. Third-party actions are pinned to commit SHAs. |
 | **Monitoring** | Container insights (logs to Log Analytics), Azure Monitor managed Prometheus (cluster + app metrics), dashboards with Grafana in the Azure portal, PromQL alert rules for 5xx rate, restarts and unavailable replicas. |
-| **Governance** | Azure Policy: pod security baseline, *only images from our ACR*, *allowed locations = indonesiacentral*; Microsoft Entra ID + Azure RBAC for Kubernetes with local accounts disabled; tags; Deployment Safeguards (optional). |
+| **Governance** | Azure Policy: pod security baseline, *only images from our ACR*, *allowed locations = indonesiacentral*; Microsoft Entra ID + Azure RBAC for Kubernetes with local accounts disabled; Pod Security Admission labels and NetworkPolicies; tags. |
 
 ## Repository map
 
@@ -34,21 +34,35 @@ k8s/base/       Deployments, Services, HPA, PDB, NetworkPolicies (kustomize)
 k8s/platform/   managed Prometheus scrape settings (kube-system)
 k8s/demo/       loadgen job, policy-violation pod for the governance demo
 infra/          main.bicep + modules (monitoring, acr, aks, aks-monitoring, policy)
+infra/bootstrap one-time Azure setup as code (resource group, identity, federated credentials, roles)
+github/         GitHub settings as code (Terraform: environment, variables, ruleset)
+scripts/        bootstrap.sh: steps 2-4 of the guide in one run (Azure Cloud Shell)
 .github/        workflows (ci, codeql, infra, deploy-app, demo-ops), CODEOWNERS, PR template
 docs/           the GitHub Pages guide (HTML, diagrams, videos)
 ```
 
 ## Quick start
 
-Follow the guide; every Azure step is done in the **Azure portal** and every GitHub step in the **GitHub web UI**:
+Follow the guide. Every Azure step is shown in the **Azure portal** and every GitHub step in the **GitHub web UI**, each with a narrated video:
 
-1. Create your copy of this repository.
-2. Prepare the subscription (resource providers, resource group in `indonesiacentral`).
-3. Connect GitHub to Azure: user-assigned managed identity + federated credentials, repository variables.
-4. Run **Infrastructure (Bicep)** — AKS and friends are created from code.
-5. **App (build & deploy to AKS)** runs automatically and prints the portal URL.
-6. Change code through a pull request and watch review, checks and deployment.
-7. Explore monitoring; 8. prove the guardrails; 9. clean up.
+1. Get the code (create your copy from this template).
+2. Prepare the subscription (resource providers, quota, resource group in `indonesiacentral`).
+3. Create the deployment identity (managed identity, federated credentials, least-privilege roles).
+4. Connect GitHub to Azure (production environment, repository variables, branch ruleset).
+5. Provision the platform with Bicep (**Infrastructure (Bicep)** workflow, approval).
+6. Build and deploy the app (**App (build & deploy to AKS)** runs automatically).
+7. Ship a change with code review (pull request, checks, merge, what-if for infrastructure).
+8. Monitor the platform; 9. prove the guardrails; 10. clean up.
+
+**Prefer code for the setup?** Steps 2-4 also exist as infrastructure as code. In Azure Cloud Shell:
+
+```bash
+git clone https://github.com/<you>/contoso-health-aks-demo.git && cd contoso-health-aks-demo
+gh auth login
+GITHUB_OWNER=<you> bash scripts/bootstrap.sh   # Bicep what-if + deploy, then Terraform for GitHub settings
+```
+
+Or deploy only the Azure part from the portal: [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fibranibeny%2Fcontoso-health-aks-demo%2Fmain%2Finfra%2Fbootstrap%2Fazuredeploy.json)
 
 Run locally (Node.js 24):
 
@@ -61,7 +75,7 @@ PORT=7000 MEMBERSHIP_API_URL=http://localhost:7001 BED_API_URL=http://localhost:
 
 ## Cost and clean-up
 
-The default cluster is 2 × `Standard_D4ds_v5` nodes (autoscaling to 4) on the AKS Free tier, plus a Standard ACR, Log Analytics and an Azure Monitor workspace. Delete the resource group `rg-contoso-health-aks` when you are done (guide step 9).
+The default cluster is 2 × `Standard_D4ds_v5` nodes (autoscaling to 4) on the AKS Free tier, plus a Standard ACR, Log Analytics and an Azure Monitor workspace. Delete the resource group `rg-contoso-health-aks` when you are done (guide step 10).
 
 ## License
 

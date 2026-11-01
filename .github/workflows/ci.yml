@@ -69,6 +69,29 @@ jobs:
           az bicep build --file infra/main.bicep --stdout > /dev/null
           az bicep build-params --file infra/main.bicepparam --stdout > /dev/null
           az bicep lint --file infra/main.bicep
+          # Bootstrap (subscription scope) and its compiled copy for the Deploy to Azure button
+          az bicep build --file infra/bootstrap/main.bicep --outfile /tmp/bootstrap.json
+          az bicep build-params --file infra/bootstrap/main.bicepparam --stdout > /dev/null
+          az bicep lint --file infra/bootstrap/main.bicep
+          strip='walk(if type == "object" then del(._generator) else . end)'
+          if ! diff -q <(jq -S "$strip" /tmp/bootstrap.json) <(jq -S "$strip" infra/bootstrap/azuredeploy.json) > /dev/null; then
+            echo "::warning file=infra/bootstrap/azuredeploy.json::Out of date. Run: az bicep build --file infra/bootstrap/main.bicep --outfile infra/bootstrap/azuredeploy.json"
+          fi
+
+  terraform:
+    name: Validate Terraform (GitHub settings)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: github
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      - name: Format, init and validate
+        run: |
+          terraform fmt -check -diff
+          terraform init -backend=false -input=false
+          terraform validate
 
   manifests:
     name: Validate Kubernetes manifests

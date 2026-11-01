@@ -1,5 +1,5 @@
-// Private image registry. No admin user, no anonymous pull: AKS pulls with its kubelet
-// managed identity (AcrPull) and GitHub Actions pushes with OIDC.
+// Private image registry. No admin user; anonymous pull stays off (the default): AKS pulls with
+// its kubelet managed identity (AcrPull) and GitHub Actions pushes with OIDC.
 param location string
 param tags object
 param name string
@@ -20,7 +20,6 @@ resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   }
   properties: {
     adminUserEnabled: false
-    anonymousPullEnabled: false
     publicNetworkAccess: 'Enabled'
   }
 }
