@@ -1,0 +1,217 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.647
+Langkah tiga.
+
+00:00:00.697 --> 00:00:04.079
+Kita membuat identitas yang dipakai GitHub Actions untuk deploy.
+
+00:00:04.129 --> 00:00:06.331
+Tidak ada kata sandi maupun client secret.
+
+00:00:06.381 --> 00:00:10.674
+GitHub membuktikan identitasnya dengan token OpenID Connect yang berlaku singkat.
+
+00:00:10.724 --> 00:00:15.228
+Di kotak pencarian portal, ketik Managed Identities, lalu buka layanannya.
+
+00:00:15.278 --> 00:00:16.028
+Pilih Create.
+
+00:00:16.078 --> 00:00:18.984
+GitHub Actions akan masuk sebagai identitas ini,
+
+00:00:19.034 --> 00:00:21.571
+jadi secret tak pernah disimpan di GitHub.
+
+00:00:21.621 --> 00:00:24.993
+Di tab Basics, pilih resource group yang baru saja kita buat.
+
+00:00:25.043 --> 00:00:28.638
+Beri nama ID github contoso health, tetap di Indonesia Central,
+
+00:00:28.688 --> 00:00:30.315
+lalu pilih Review and create.
+
+00:00:30.365 --> 00:00:33.286
+Tinjau pengaturannya, lalu pilih Create.
+
+00:00:33.336 --> 00:00:36.089
+Deployment selesai dalam beberapa detik.
+
+00:00:36.139 --> 00:00:37.561
+Pilih Go to resource.
+
+00:00:37.611 --> 00:00:40.673
+Identitas kini ada di resource group kita.
+
+00:00:40.723 --> 00:00:41.784
+Mari kita buka.
+
+00:00:41.834 --> 00:00:45.037
+Di halaman Overview, catat Client ID dan Object ID.
+
+00:00:45.087 --> 00:00:47.907
+Nanti keduanya dimasukkan ke variabel GitHub.
+
+00:00:47.957 --> 00:00:51.798
+Keduanya mengidentifikasi identitas ini, tetapi bukan secret.
+
+00:00:53.348 --> 00:00:56.043
+Di bawah Settings, buka Federated credentials.
+
+00:00:56.093 --> 00:00:59.982
+Di sinilah Azure belajar memercayai token yang diterbitkan GitHub.
+
+00:01:00.032 --> 00:01:01.939
+Belum ada yang dikonfigurasi.
+
+00:01:01.989 --> 00:01:03.357
+Pilih Add credential.
+
+00:01:03.407 --> 00:01:08.892
+Kita akan menambahkan tiga: environment production, pull request, dan branch main.
+
+00:01:08.942 --> 00:01:12.806
+Untuk skenario, pilih GitHub Actions deploying Azure resources.
+
+00:01:12.856 --> 00:01:16.351
+Formulir ini memakai format subject GitHub yang tidak dapat diubah,
+
+00:01:16.401 --> 00:01:18.521
+berisi ID numerik pemilik dan repositori.
+
+00:01:18.571 --> 00:01:21.167
+Repositori baru memakai format ini secara default.
+
+00:01:22.217 --> 00:01:25.312
+Isi pemilik dan repositori beserta ID-nya.
+
+00:01:25.362 --> 00:01:28.083
+Kedua ID itu berasal dari API GitHub.
+
+00:01:28.133 --> 00:01:29.949
+Untuk entity, pilih Environment.
+
+00:01:29.999 --> 00:01:34.672
+Job yang mendeklarasikan environment production akan cocok dengan kredensial ini.
+
+00:01:34.722 --> 00:01:35.802
+Ketik production.
+
+00:01:35.852 --> 00:01:38.857
+Subject identifier dibuat otomatis untuk Anda.
+
+00:01:38.907 --> 00:01:43.043
+Beri nama kredensial, biarkan audience default, lalu pilih Add.
+
+00:01:43.093 --> 00:01:44.772
+Satu kredensial sudah siap.
+
+00:01:44.822 --> 00:01:48.742
+Kini ulangi dua kali, dengan pemilik dan repositori yang sama.
+
+00:01:50.292 --> 00:01:52.700
+Kredensial kedua memakai entity Pull request.
+
+00:01:52.750 --> 00:01:56.688
+Pemeriksaan what-if Bicep berjalan di pull request dengan kredensial ini.
+
+00:01:56.738 --> 00:01:59.766
+Yang ketiga memakai entity Branch, dengan nilai main,
+
+00:01:59.816 --> 00:02:01.566
+untuk build image dan job demo.
+
+00:02:01.616 --> 00:02:02.524
+Tiga kredensial.
+
+00:02:02.574 --> 00:02:06.474
+Tak ada hal lain di GitHub yang bisa mendapat token identitas ini.
+
+00:02:07.524 --> 00:02:09.222
+Sekarang kita berikan izin.
+
+00:02:09.272 --> 00:02:13.493
+Buka resource group, lalu Access control, dan Add role assignment.
+
+00:02:13.543 --> 00:02:15.167
+Role pertama, Contributor.
+
+00:02:15.217 --> 00:02:20.123
+Bisa deploy resource, tetapi tidak bisa memberi akses atau menetapkan policy.
+
+00:02:20.173 --> 00:02:25.001
+Di Members, pilih Managed identity, klik Select members, lalu pilih identitas kita.
+
+00:02:25.051 --> 00:02:27.897
+Identitas ini tercantum sebagai anggota.
+
+00:02:27.947 --> 00:02:29.635
+Pilih Review and assign.
+
+00:02:29.685 --> 00:02:31.104
+Periksa ringkasannya.
+
+00:02:31.154 --> 00:02:34.743
+Contributor, dengan cakupan resource group ini saja.
+
+00:02:34.793 --> 00:02:36.422
+Pilih Review and assign.
+
+00:02:36.472 --> 00:02:38.820
+Role kedua, Resource Policy Contributor.
+
+00:02:38.870 --> 00:02:42.896
+Role ini memungkinkan templat Bicep membuat assignment Azure Policy.
+
+00:02:42.946 --> 00:02:46.065
+Role ketiga, Role Based Access Control Administrator.
+
+00:02:46.115 --> 00:02:50.908
+Bicep membuat dua role assignment, jadi kita izinkan persis itu, dan tidak lebih.
+
+00:02:50.958 --> 00:02:55.305
+Di Conditions, biarkan opsi yang hanya mengizinkan role terpilih untuk principal
+
+00:02:55.355 --> 00:02:57.943
+terpilih. Lalu klik Select roles and principals.
+
+00:02:57.993 --> 00:03:02.196
+Pilih templat Constrain roles and principal types, lalu pilih Configure.
+
+00:03:02.246 --> 00:03:07.112
+Tambahkan role ACR Pull, lalu Azure Kubernetes Service RBAC Cluster Admin.
+
+00:03:07.162 --> 00:03:11.687
+Untuk principal types, centang Users dan Service principals.
+
+00:03:11.737 --> 00:03:14.128
+Groups tetap kosong. Pilih Save.
+
+00:03:14.178 --> 00:03:18.008
+Templat kini berstatus Configured. Pilih Save.
+
+00:03:18.058 --> 00:03:19.368
+Kondisi sudah terpasang.
+
+00:03:19.418 --> 00:03:22.143
+Identitas ini hanya bisa menetapkan dua role ini,
+
+00:03:22.193 --> 00:03:24.919
+dan hanya kepada pengguna atau service principal.
+
+00:03:24.969 --> 00:03:28.277
+Tinjau assignment-nya, lalu pilih Review and assign.
+
+00:03:28.327 --> 00:03:31.139
+Notifikasi mengonfirmasi assignment baru ini.
+
+00:03:31.189 --> 00:03:33.764
+Di tab Role assignments, cari identitas ini.
+
+00:03:33.814 --> 00:03:37.343
+Tepat tiga role, semuanya dengan cakupan resource group ini,
+
+00:03:37.393 --> 00:03:39.490
+dan tidak ada di level subscription.

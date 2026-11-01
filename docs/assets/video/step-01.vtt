@@ -1,0 +1,55 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.410
+Step one.
+
+00:00:00.460 --> 00:00:03.685
+Everything in this demo lives in one GitHub repository: the app,
+
+00:00:03.735 --> 00:00:07.931
+the Kubernetes manifests, the Bicep templates, and the workflows that connect them.
+
+00:00:07.981 --> 00:00:09.668
+This is the template repository.
+
+00:00:09.718 --> 00:00:13.793
+Signed in to GitHub, select Use this template, then Create a new repository,
+
+00:00:13.843 --> 00:00:15.258
+and you have your own copy.
+
+00:00:15.308 --> 00:00:21.588
+The src folder holds three small Node.js services: the membership API, the bed API,
+
+00:00:21.638 --> 00:00:22.732
+and the portal.
+
+00:00:22.782 --> 00:00:27.680
+Under k8s base are the Kubernetes manifests: deployments, services, autoscalers,
+
+00:00:27.730 --> 00:00:30.216
+disruption budgets, and network policies.
+
+00:00:30.266 --> 00:00:33.296
+The infra folder has the Bicep template and its modules.
+
+00:00:33.346 --> 00:00:36.652
+The bootstrap folder holds the one-time Azure setup, as code.
+
+00:00:36.702 --> 00:00:40.991
+There are seven workflows, from CI and Code QL to infrastructure, app delivery,
+
+00:00:41.041 --> 00:00:43.682
+demo scenarios, and the publishing of this guide.
+
+00:00:43.732 --> 00:00:48.319
+Step three needs two numbers: the repository ID and the owner ID.
+
+00:00:48.369 --> 00:00:50.174
+The GitHub API shows both.
+
+00:00:51.224 --> 00:00:55.154
+The README links back to this guide and summarises what the demo covers.
+
+00:00:55.204 --> 00:00:59.460
+And this guide itself is published from the same repository, with GitHub Pages.

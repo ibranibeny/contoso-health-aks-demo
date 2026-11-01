@@ -1,0 +1,28 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:03.131
+This is the full Contoso Health demo on Azure Kubernetes Service,
+
+00:00:03.181 --> 00:00:04.698
+in the Indonesia Central region.
+
+00:00:04.748 --> 00:00:08.760
+In ten steps we prepare the subscription and a deployment identity without secrets,
+
+00:00:08.810 --> 00:00:11.207
+connect GitHub, provision the platform with Bicep,
+
+00:00:11.257 --> 00:00:14.340
+ship the app through pull requests, watch it with Azure Monitor,
+
+00:00:14.390 --> 00:00:17.276
+prove the Azure Policy guardrails, and finish with clean-up.
+
+00:00:17.326 --> 00:00:19.821
+Steps two to four were recorded in the Azure portal;
+
+00:00:19.871 --> 00:00:21.975
+the other steps show the real automated run.
+
+00:00:22.025 --> 00:00:23.590
+All data in the app is synthetic.

@@ -1,0 +1,55 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.679
+Langkah empat. Kita hubungkan repositori ke Azure,
+
+00:00:02.729 --> 00:00:05.954
+dan pasang guardrail pada jalur perubahan menuju production.
+
+00:00:06.004 --> 00:00:10.188
+Di Microsoft Entra ID, cari pengguna Anda sendiri, lalu salin object ID-nya.
+
+00:00:10.238 --> 00:00:14.310
+Templat memakainya untuk memberi Anda akses ke tampilan cluster di portal.
+
+00:00:14.360 --> 00:00:15.571
+Salin Object ID.
+
+00:00:15.621 --> 00:00:19.352
+Nilai ini menjadi pengaturan admin principal ID.
+
+00:00:19.402 --> 00:00:23.193
+Di pengaturan repositori, buat environment bernama production.
+
+00:00:23.243 --> 00:00:26.360
+Centang Required reviewers, lalu tambahkan diri Anda.
+
+00:00:26.410 --> 00:00:29.407
+Job deploy ke production kini menunggu persetujuan.
+
+00:00:29.457 --> 00:00:32.609
+Inilah hasil akhirnya di repositori ini: gerbang production,
+
+00:00:32.659 --> 00:00:36.185
+lima secret terenkripsi berisi ID Azure, dan ruleset aktif di main.
+
+00:00:37.235 --> 00:00:39.638
+Pengaturan yang sama juga ada sebagai kode.
+
+00:00:39.688 --> 00:00:43.118
+File Terraform ini mendeklarasikan environment, reviewer-nya,
+
+00:00:43.168 --> 00:00:44.830
+dan branch policy khusus main.
+
+00:00:44.880 --> 00:00:49.429
+Dan ruleset-nya: pull request, sebelas status check wajib, tanpa force push,
+
+00:00:49.479 --> 00:00:50.760
+dan tanpa penghapusan.
+
+00:00:50.810 --> 00:00:53.369
+Workflow membaca ID tersebut dari variabel atau secret,
+
+00:00:53.419 --> 00:00:57.210
+dan job pertama memeriksa bahwa Azure sudah terhubung sebelum yang lain berjalan.

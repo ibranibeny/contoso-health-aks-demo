@@ -1,0 +1,58 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.822
+Langkah tujuh.
+
+00:00:00.872 --> 00:00:05.366
+Perubahan masuk ke production seperti cara sebuah tim merilisnya: branch,
+
+00:00:05.416 --> 00:00:08.354
+pull request, check, review, merge, persetujuan.
+
+00:00:08.404 --> 00:00:11.162
+Pull request empat mengubah satu paragraf di portal.
+
+00:00:11.212 --> 00:00:14.565
+Templatnya menanyakan apa yang berubah, bagaimana pengujiannya,
+
+00:00:14.615 --> 00:00:15.753
+dan cara rollback-nya.
+
+00:00:15.803 --> 00:00:19.250
+Tab Files changed menampilkan diff persis yang disetujui reviewer.
+
+00:00:19.300 --> 00:00:22.536
+Pull request ini baru di-merge setelah check lolos: dua belas check,
+
+00:00:22.586 --> 00:00:24.518
+termasuk sebelas yang diwajibkan ruleset.
+
+00:00:24.568 --> 00:00:27.205
+Merge tersebut memicu workflow aplikasi.
+
+00:00:27.255 --> 00:00:29.959
+Setelah disetujui, versi baru di-rollout.
+
+00:00:30.009 --> 00:00:32.185
+Dan sudah live: kalimat barunya muncul,
+
+00:00:32.235 --> 00:00:34.981
+dan badge versi menampilkan commit yang di-merge.
+
+00:00:36.031 --> 00:00:40.420
+Pull request lima mengubah infrastruktur: batas maksimum autoscaler naik dari empat
+
+00:00:40.470 --> 00:00:40.848
+ke lima.
+
+00:00:40.898 --> 00:00:43.629
+Job what-if berjalan dengan kredensial pull request.
+
+00:00:43.679 --> 00:00:46.097
+Komentarnya memuat apa yang akan berubah.
+
+00:00:46.147 --> 00:00:48.685
+Cluster menunjukkan Modify, sesuai harapan.
+
+00:00:48.735 --> 00:00:53.440
+Beberapa baris lain adalah noise what-if, jadi baca detailnya sebelum di-merge.
