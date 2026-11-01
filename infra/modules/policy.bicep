@@ -28,11 +28,8 @@ resource podSecurityBaseline 'Microsoft.Authorization/policyAssignments@2024-04-
         value: effect
       }
     }
-    nonComplianceMessages: [
-      {
-        message: 'Contoso Health guardrail: workloads must follow the Kubernetes pod security baseline.'
-      }
-    ]
+    // No nonComplianceMessages: Azure Policy rejects them for 'Microsoft.Kubernetes.Data' mode definitions.
+    // Gatekeeper returns its own denial message at admission.
   }
 }
 
@@ -56,11 +53,7 @@ resource allowedImages 'Microsoft.Authorization/policyAssignments@2024-04-01' = 
         value: '^${replace(acrLoginServer, '.', '\\.')}/.+$'
       }
     }
-    nonComplianceMessages: [
-      {
-        message: 'Contoso Health guardrail: use an image from ${acrLoginServer}.'
-      }
-    ]
+    // No nonComplianceMessages: not supported for 'Microsoft.Kubernetes.Data' mode definitions.
   }
 }
 
