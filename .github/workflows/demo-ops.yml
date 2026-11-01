@@ -1,8 +1,10 @@
-# Demo scenarios you can trigger from the GitHub UI (Actions > Demo scenarios > Run workflow):
+# Demo scenarios. Run from the GitHub UI (Actions > Demo scenarios > Run workflow) or by API
+# (repository_dispatch, event type "demo", client_payload {"scenario": "..."}):
 #   traffic      - 10 minutes of synthetic load (fills the dashboards)
 #   fault-on     - make 30% of membership-api requests fail (fires the 5xx alert)
 #   fault-off    - remove the injected fault
 #   policy-check - try to deploy a non-compliant pod (server-side dry run) and show the denial
+#   region-check - validate a deployment outside the allowed region and show the denial
 name: Demo scenarios
 
 on:
@@ -12,7 +14,9 @@ on:
         description: Scenario to run
         required: true
         type: choice
-        options: [traffic, fault-on, fault-off, policy-check]
+        options: [traffic, fault-on, fault-off, policy-check, region-check]
+  repository_dispatch:
+    types: [demo]
 
 permissions:
   contents: read
@@ -20,20 +24,28 @@ permissions:
 
 env:
   AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-contoso-health-aks' }}
+  SCENARIO: ${{ inputs.scenario || github.event.client_payload.scenario }}
 
 jobs:
   run:
-    name: ${{ inputs.scenario }}
+    name: Scenario
     runs-on: ubuntu-latest
     # Runs from main without an approval gate (OIDC subject = ref:refs/heads/main).
     steps:
+      - name: Validate the scenario name
+        run: |
+          case "$SCENARIO" in
+            traffic|fault-on|fault-off|policy-check|region-check) echo "Scenario: $SCENARIO" ;;
+            *) echo "::error::Unknown scenario"; exit 1 ;;
+          esac
       - uses: actions/checkout@v7
       - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ vars.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID || secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID || secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Connect to the cluster with Microsoft Entra ID
+        if: env.SCENARIO != 'region-check'
         run: |
           AKS_NAME=$(az aks list -g "$AZURE_RESOURCE_GROUP" --query "[0].name" -o tsv)
           az aks get-credentials -g "$AZURE_RESOURCE_GROUP" -n "$AKS_NAME" --overwrite-existing
@@ -42,26 +54,29 @@ jobs:
           kubectl config set-credentials github-actions --token="$TOKEN"
           kubectl config set-context --current --user=github-actions
       - name: Traffic
-        if: inputs.scenario == 'traffic'
+        if: env.SCENARIO == 'traffic'
         run: |
           IMAGE=$(kubectl -n contoso-health get deploy portal -o jsonpath='{.spec.template.spec.containers[0].image}')
           kubectl -n contoso-health delete job loadgen --ignore-not-found
           sed "s#<ACR_LOGIN_SERVER>/contoso-health/portal:<TAG>#${IMAGE}#" k8s/demo/loadgen-job.yaml | kubectl apply -f -
           echo "Started a 10-minute load test with image \`$IMAGE\`." >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Traffic started::10-minute load test running as job/loadgen in contoso-health"
       - name: Fault on
-        if: inputs.scenario == 'fault-on'
+        if: env.SCENARIO == 'fault-on'
         run: |
           kubectl -n contoso-health set env deploy/membership-api FAULT_RATE=0.3
           kubectl -n contoso-health rollout status deploy/membership-api --timeout=180s
           echo "membership-api now fails 30% of API calls. Expect the **ContosoHealthHigh5xxRate** alert within ~5-10 minutes." >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Fault injected::membership-api FAULT_RATE=0.3"
       - name: Fault off
-        if: inputs.scenario == 'fault-off'
+        if: env.SCENARIO == 'fault-off'
         run: |
           kubectl -n contoso-health set env deploy/membership-api FAULT_RATE-
           kubectl -n contoso-health rollout status deploy/membership-api --timeout=180s
           echo "Fault removed from membership-api." >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Fault removed::membership-api FAULT_RATE unset"
       - name: Policy check
-        if: inputs.scenario == 'policy-check'
+        if: env.SCENARIO == 'policy-check'
         run: |
           set +e
           OUT=$(kubectl apply --dry-run=server -f k8s/demo/policy-violation.yaml 2>&1)
@@ -69,4 +84,28 @@ jobs:
           echo "$OUT"
           { echo "### Admission result for k8s/demo/policy-violation.yaml"; echo '```'; echo "$OUT"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           if [ $RC -eq 0 ]; then echo "::error::The non-compliant pod was NOT blocked. Check the Azure Policy assignments (they can take ~20 minutes to sync)."; exit 1; fi
-          echo "::notice::Blocked by Azure Policy as expected."
+          echo "::notice title=Denied by Azure Policy::$(echo "$OUT" | tr '\n' ' ' | cut -c1-2500)"
+      - name: Region check
+        if: env.SCENARIO == 'region-check'
+        run: |
+          set +e
+          cat > /tmp/nsg-eastus.json <<'JSON'
+          {
+            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+            "contentVersion": "1.0.0.0",
+            "resources": [{
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2023-09-01",
+              "name": "nsg-region-check",
+              "location": "eastus",
+              "properties": {}
+            }]
+          }
+          JSON
+          # Validation only: nothing is created even if the policy were missing.
+          OUT=$(az deployment group validate -g "$AZURE_RESOURCE_GROUP" --template-file /tmp/nsg-eastus.json 2>&1)
+          RC=$?
+          echo "$OUT"
+          { echo "### Validation of a network security group in eastus"; echo '```'; echo "$OUT"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ $RC -eq 0 ]; then echo "::error::The out-of-region resource passed validation. Check the allowed-locations assignment."; exit 1; fi
+          echo "::notice title=Denied by Azure Policy::$(echo "$OUT" | tr '\n' ' ' | cut -c1-2500)"

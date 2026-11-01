@@ -1,5 +1,6 @@
 # Infrastructure as code: Bicep what-if on pull requests, deployment on main (with approval).
-# Authenticates to Azure with OpenID Connect - no secrets are stored in GitHub.
+# Authenticates to Azure with OpenID Connect - no credentials are stored in GitHub.
+# Identity values come from repository variables or, if you prefer, repository secrets.
 name: Infrastructure (Bicep)
 
 on:
@@ -10,6 +11,8 @@ on:
     branches: [main]
     paths: ['infra/**', '.github/workflows/infra.yml']
   workflow_dispatch:
+  repository_dispatch:
+    types: [deploy-infra]
 
 permissions:
   contents: read
@@ -22,36 +25,51 @@ concurrency:
 
 env:
   AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-contoso-health-aks' }}
-  AZURE_PRINCIPAL_ID: ${{ vars.AZURE_PRINCIPAL_ID }}
-  ADMIN_PRINCIPAL_ID: ${{ vars.ADMIN_PRINCIPAL_ID }}
+  AZURE_PRINCIPAL_ID: ${{ vars.AZURE_PRINCIPAL_ID || secrets.AZURE_PRINCIPAL_ID }}
+  ADMIN_PRINCIPAL_ID: ${{ vars.ADMIN_PRINCIPAL_ID || secrets.ADMIN_PRINCIPAL_ID }}
   ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
   AKS_NODE_VM_SIZE: ${{ vars.AKS_NODE_VM_SIZE || 'Standard_D4ds_v5' }}
 
 jobs:
-  not-connected:
-    name: Azure not connected yet
-    if: vars.AZURE_CLIENT_ID == ''
+  config:
+    name: Check Azure connection
     runs-on: ubuntu-latest
+    outputs:
+      connected: ${{ steps.check.outputs.connected }}
     steps:
-      - run: echo "::notice::Azure is not connected. Add the AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID and AZURE_PRINCIPAL_ID repository variables (guide step 3)."
+      - id: check
+        env:
+          CLIENT_ID: ${{ vars.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID }}
+        run: |
+          if [ -n "$CLIENT_ID" ]; then
+            echo "connected=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "connected=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Azure is not connected. Add AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID and AZURE_PRINCIPAL_ID as repository variables or secrets (guide step 4)."
+          fi
 
   what-if:
     name: What-if (preview changes)
-    if: github.event_name == 'pull_request' && vars.AZURE_CLIENT_ID != ''
+    needs: config
+    if: github.event_name == 'pull_request' && needs.config.outputs.connected == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ vars.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID || secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID || secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Preview changes (what-if)
         run: |
-          az deployment group what-if \
-            --resource-group "$AZURE_RESOURCE_GROUP" \
-            --parameters infra/main.bicepparam \
-            --no-pretty-print > whatif.json
+          if ! az deployment group what-if \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --parameters infra/main.bicepparam \
+              --no-pretty-print > whatif.json 2> whatif-error.txt; then
+            cat whatif-error.txt
+            echo "::error title=What-if failed::$(tr '\n' ' ' < whatif-error.txt | tail -c 1500)"
+            exit 1
+          fi
           {
             echo "### Bicep what-if for \`$AZURE_RESOURCE_GROUP\`"
             echo ""
@@ -67,27 +85,43 @@ jobs:
 
   deploy:
     name: Deploy to Azure
-    if: github.event_name != 'pull_request' && vars.AZURE_CLIENT_ID != ''
+    needs: config
+    if: github.event_name != 'pull_request' && needs.config.outputs.connected == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v7
       - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ vars.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID || secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID || secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Deploy Bicep (incremental)
         run: |
-          az deployment group create \
-            --name "infra-${GITHUB_RUN_NUMBER}" \
-            --resource-group "$AZURE_RESOURCE_GROUP" \
-            --parameters infra/main.bicepparam \
-            --query properties.outputs -o json | tee outputs.json
+          NAME="infra-${GITHUB_RUN_NUMBER}"
+          if ! az deployment group create \
+              --name "$NAME" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --parameters infra/main.bicepparam \
+              --query properties.outputs -o json > outputs.json 2> deploy-log.txt; then
+            cat deploy-log.txt
+            # Surface the failing operations as annotations (readable without opening the log).
+            for d in "$NAME" monitoring registry cluster observability guardrails; do
+              az deployment operation group list -g "$AZURE_RESOURCE_GROUP" -n "$d" \
+                --query "[?properties.provisioningState=='Failed'].[properties.targetResource.resourceType, properties.targetResource.resourceName, properties.statusMessage.error.code, properties.statusMessage.error.message, properties.statusMessage.error.details[0].message]" \
+                -o tsv 2>/dev/null | while IFS=$'\t' read -r type name code msg detail; do
+                  echo "::error title=${d}: ${type} ${name}::${code}: ${msg} ${detail}" | cut -c1-3000
+                done
+            done
+            echo "::error title=Bicep deployment failed::$(tr '\n' ' ' < deploy-log.txt | tail -c 2500)"
+            exit 1
+          fi
+          cat deploy-log.txt
           {
-            echo "### Deployed \`infra-${GITHUB_RUN_NUMBER}\` to \`$AZURE_RESOURCE_GROUP\`"
+            echo "### Deployed \`$NAME\` to \`$AZURE_RESOURCE_GROUP\`"
             echo ""
             echo "| Output | Value |"
             echo "|---|---|"
             jq -r 'to_entries[] | "| \(.key) | \(.value.value) |"' outputs.json
           } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Infrastructure deployed::$(jq -c 'with_entries(.value = .value.value)' outputs.json)"

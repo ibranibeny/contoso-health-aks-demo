@@ -1,0 +1,41 @@
+# Publishes the guide: mirrors docs/ on main to the gh-pages branch, which GitHub Pages serves.
+name: Publish guide (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**']
+  workflow_dispatch:
+  repository_dispatch:
+    types: [publish-guide]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-guide
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Mirror docs/ to gh-pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Sync and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git worktree add -B gh-pages ../site origin/gh-pages
+          rsync -a --delete --exclude .git docs/ ../site/
+          cd ../site
+          git add -A
+          if git diff --cached --quiet; then
+            echo "::notice::gh-pages is already up to date."
+            exit 0
+          fi
+          git commit -q -m "Publish guide from ${GITHUB_SHA::7}"
+          git push origin gh-pages
+          echo "::notice title=Guide published::https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"

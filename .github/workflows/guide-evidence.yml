@@ -1,0 +1,72 @@
+# Maintainer tool for the guide: takes screenshots of public pages (the live app, GitHub Pages, public
+# repository pages) and collects read-only platform facts from Azure, then stores them on the
+# guide-evidence branch. Trigger by API: repository_dispatch, event type "capture",
+# client_payload {"label": "step5", "azure": true, "targets": [{"name": "...", "url": "..."}]}.
+name: Guide evidence
+
+on:
+  repository_dispatch:
+    types: [capture]
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: guide-evidence
+  cancel-in-progress: false
+
+env:
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-contoso-health-aks' }}
+  LABEL: ${{ github.event.client_payload.label }}
+  OUT_DIR: ${{ github.workspace }}/evidence-out
+
+jobs:
+  capture:
+    name: Capture
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate the label
+        run: |
+          if ! [[ "$LABEL" =~ ^[a-z0-9-]{1,40}$ ]]; then echo "::error::Label must match [a-z0-9-]{1,40}"; exit 1; fi
+          mkdir -p "$OUT_DIR"
+      - uses: actions/checkout@v7
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        if: github.event.client_payload.azure == true
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID || secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID || secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Platform facts (read-only)
+        if: github.event.client_payload.azure == true
+        run: bash scripts/guide/collect-azure.sh
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Screenshots
+        env:
+          CAPTURE_PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+        run: |
+          cd scripts/guide
+          npm install --no-save --no-audit --no-fund playwright@1 > /dev/null
+          npx playwright install --with-deps chromium > /dev/null
+          node capture.mjs
+      - name: Store on the guide-evidence branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch -q origin guide-evidence 2>/dev/null; then
+            git worktree add -B guide-evidence ../ev origin/guide-evidence
+          else
+            git worktree add --detach ../ev
+            git -C ../ev checkout -q --orphan guide-evidence
+            git -C ../ev rm -rfq .
+          fi
+          rm -rf "../ev/runs/$LABEL" && mkdir -p "../ev/runs/$LABEL"
+          cp -r "$OUT_DIR"/. "../ev/runs/$LABEL/"
+          echo "{\"run\": \"${GITHUB_RUN_ID}\", \"sha\": \"${GITHUB_SHA}\", \"time\": \"$(date -u +%FT%TZ)\"}" > "../ev/runs/$LABEL/_meta.json"
+          cd ../ev
+          git add -A
+          git commit -q -m "Evidence: $LABEL"
+          for i in 1 2 3; do git push -q origin guide-evidence && break; git pull -q --rebase origin guide-evidence; done
+          echo "::notice title=Evidence stored::runs/$LABEL ($(ls "runs/$LABEL" | wc -l) files)"
