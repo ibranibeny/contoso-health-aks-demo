@@ -53,4 +53,10 @@ az rest --method get --url "https://management.azure.com/subscriptions/$SUB/prov
 az resource list -g "$RG" --resource-type Microsoft.AlertsManagement/prometheusRuleGroups --query "[].name" -o json > "$O/rule-groups.json"
 az monitor activity-log list -g "$RG" --offset 1d --max-events 200 --query "[?caller!=null && contains(operationName.value, 'write')].{time:eventTimestamp, operation:operationName.localizedValue, status:status.value, caller:caller, resource:resourceId}" -o json > "$O/activity.json" 2>/dev/null
 az role assignment list -g "$RG" --query "[].{principalType:principalType, role:roleDefinitionName, scope:scope, condition:condition != null}" -o json > "$O/role-assignments.json" 2>/dev/null
+# Defense in depth: blank out the subscription and tenant IDs and e-mail addresses.
+SUBID=$(az account show --query id -o tsv); TENID=$(az account show --query tenantId -o tsv)
+for f in "$O"/*; do
+  [ -f "$f" ] || continue
+  sed -i -E -e "s/${SUBID}/<subscription-id>/g" -e "s/${TENID}/<tenant-id>/g" -e 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/<user>/g' "$f"
+done
 ls -la "$O"
