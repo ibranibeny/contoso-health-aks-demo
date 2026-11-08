@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Zero-dependency Node.js web front end (static UI + API gateway to the two back-end services).
-FROM node:24-alpine
+FROM node:25-alpine
 ENV NODE_ENV=production PORT=8080 SERVICE_NAME=portal
 WORKDIR /app
 COPY --chown=node:node package.json server.js loadgen.js ./
